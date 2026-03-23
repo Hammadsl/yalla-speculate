@@ -1,143 +1,116 @@
 import streamlit as st
 import yfinance as yf
 import pandas as pd
+import pandas_ta as ta
 import plotly.graph_objects as go
+from plotly.subplots import make_subplots
+import numpy as np
 
-# --- إعدادات المنصة ---
-st.set_page_config(page_title="Sahm Copy - Yalla Scalp", layout="wide")
+# --- إعدادات المنصة الاحترافية القصوى ---
+st.set_page_config(page_title="Yalla Scalp - Ultra Terminal", layout="wide", initial_sidebar_state="expanded")
 
-# --- تنسيق CSS لمحاكاة "سهم" بدقة ---
+# --- تنسيق CSS فاخر (Dark Blue Terminal) ---
 st.markdown("""
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Noto+Sans+Arabic:wght@400;700&display=swap');
-    
-    html, body, [class*="css"] {
-        font-family: 'Inter', 'Noto Sans Arabic', sans-serif;
-        direction: rtl;
-        background-color: #F8F9FB;
-    }
-
-    /* شريط المؤشرات العلوي */
-    .market-header {
-        background-color: #FFFFFF;
-        padding: 15px;
-        border-radius: 0 0 15px 15px;
-        border-bottom: 1px solid #E0E4E9;
-        display: flex;
-        justify-content: space-around;
-        margin-bottom: 20px;
-    }
-    .market-box { text-align: center; min-width: 150px; }
-    .m-title { font-size: 12px; color: #848E9C; margin-bottom: 5px; }
-    .m-price { font-size: 14px; font-weight: bold; color: #1E2329; }
-    .m-change { font-size: 12px; }
-    .up { color: #0ECB81; } .down { color: #F6465D; }
-
-    /* الحاويات الجانبية */
-    .side-card {
-        background-color: #FFFFFF;
-        padding: 20px;
-        border-radius: 12px;
-        border: 1px solid #E0E4E9;
-        margin-bottom: 15px;
-    }
-    .card-title { font-size: 16px; font-weight: bold; color: #1E2329; border-bottom: 2px solid #0ECB81; display: inline-block; margin-bottom: 15px; }
-
-    /* البحث */
-    .stTextInput input {
-        border-radius: 8px !important;
-        background-color: #FFFFFF !important;
-        border: 1px solid #D1D5DB !important;
-        text-align: left !important; /* الأرقام والرموز يسار */
-    }
-
-    /* كروت الأهداف */
-    .target-grid { display: flex; gap: 10px; margin-top: 15px; }
-    .target-item { flex: 1; padding: 15px; border-radius: 10px; text-align: center; color: white; font-weight: bold; }
+    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap');
+    html, body, [class*="css"] { font-family: 'Cairo', sans-serif; direction: rtl; }
+    .stApp { background-color: #0d1117; color: #e6edf3; }
+    .metric-card { background: #161b22; padding: 15px; border-radius: 10px; border: 1px solid #30363d; text-align: center; }
+    .buy-signal { color: #39d353; font-weight: bold; border: 1px solid #39d353; padding: 10px; border-radius: 5px; }
+    .sell-signal { color: #f85149; font-weight: bold; border: 1px solid #f85149; padding: 10px; border-radius: 5px; }
     </style>
     """, unsafe_allow_html=True)
 
-# --- 1. شريط المؤشرات العلوي (واضح ومنظم) ---
-st.markdown("""
-    <div class="market-header">
-        <div class="market-box">
-            <div class="m-title">S&P 500</div>
-            <div class="m-price">5,241.53</div>
-            <div class="m-change down">▼ -1.51%</div>
-        </div>
-        <div class="market-box">
-            <div class="m-title">NASDAQ</div>
-            <div class="m-price">16,384.47</div>
-            <div class="m-change down">▼ -2.01%</div>
-        </div>
-        <div class="market-box">
-            <div class="m-title">Dow Jones</div>
-            <div class="m-price">39,475.90</div>
-            <div class="m-change down">▼ -0.96%</div>
-        </div>
-        <div class="market-box">
-            <div class="m-title">TASI</div>
-            <div class="m-price">12,634.20</div>
-            <div class="m-change up">▲ +0.40%</div>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
+# --- محرك البحث الذكي في الأعلى ---
+popular_stocks = ["NVDA", "AAPL", "TSLA", "LCID", "MSFT", "AMD", "PLTR", "TASI", "BTC-USD"]
+symbol = st.sidebar.selectbox("🔍 اختر سهم أو ابحث عن رمز:", popular_stocks)
 
-# --- 2. توزيع المحتوى (جانبي ويمين) ---
-col_main, col_side = st.columns([3, 1])
+# --- جلب البيانات ---
+ticker = yf.Ticker(symbol)
+data = ticker.history(period="1y", interval="1d")
+info = ticker.info
 
-with col_side:
-    # قائمة المتابعة
-    st.markdown('<div class="side-card"><div class="card-title">قائمة المتابعة</div>', unsafe_allow_html=True)
-    st.markdown("""
-        <div style="display:flex; justify-content:space-between; padding:10px 0;">
-            <span style="font-weight:bold;">LCID</span>
-            <span class="down">10.06 $</span>
-        </div>
-    """, unsafe_allow_html=True)
-    st.markdown('</div>', unsafe_allow_html=True)
+# --- حساب المؤشرات الفنية (Technical Engine) ---
+data['SMA20'] = ta.sma(data['Close'], length=20)
+data['SMA50'] = ta.sma(data['Close'], length=50)
+data['EMA9'] = ta.ema(data['Close'], length=9)
+data['RSI'] = ta.rsi(data['Close'], length=14)
+bbands = ta.bbands(data['Close'], length=20, std=2)
+data = pd.concat([data, bbands], axis=1)
+macd = ta.macd(data['Close'])
+data = pd.concat([data, macd], axis=1)
 
-    # حاسبة الأرباح
-    st.markdown('<div class="side-card"><div class="card-title">حاسبة الأرباح</div>', unsafe_allow_html=True)
-    buy_price = st.number_input("سعر الشراء", value=10.0, step=0.01)
-    target_price = st.number_input("السعر المستهدف", value=11.5, step=0.01)
-    shares = st.number_input("الكمية", value=100)
-    total_profit = (target_price - buy_price) * shares
-    st.markdown(f"<div style='background:#E8F9F3; padding:10px; border-radius:5px; color:#0ECB81; text-align:center;'>الربح المتوقع: {total_profit:,.2f} $</div>", unsafe_allow_html=True)
-    st.markdown('</div>', unsafe_allow_html=True)
+# --- توزيع التبويبات (Tabs) ---
+tab1, tab2, tab3, tab4, tab5 = st.tabs(["📊 التحليل الفني", "📑 البيانات المالية", "🔍 الماسح الذكي", "🤖 إشارات AI", "🛡️ إدارة المخاطر"])
 
-with col_main:
-    # محرك البحث
-    symbol = st.text_input("", placeholder="Search Ticker (e.g. NVDA, AAPL, LCID)...").upper()
+with tab1: # صفحة الشارت والمؤشرات
+    st.markdown(f"### {info.get('longName', symbol)} | {symbol}")
     
-    if symbol:
-        try:
-            ticker_data = yf.Ticker(symbol)
-            df = ticker_data.history(period="1d", interval="1m")
-            
-            if not df.empty:
-                current_p = df['Close'].iloc[-1]
-                
-                # عرض السعر
-                st.markdown(f"<h2>{symbol} <span style='color:#848E9C; font-size:16px;'>Global Market</span></h2>", unsafe_allow_html=True)
-                st.markdown(f"<h1 style='color:#1E2329;'>{current_p:,.2f} <span style='font-size:18px; color:#F6465D;'>-2.33%</span></h1>", unsafe_allow_html=True)
+    # بطاقات سريعة
+    c1, c2, c3, c4, c5 = st.columns(5)
+    c1.metric("السعر الحالي", f"${data['Close'].iloc[-1]:.2f}")
+    c2.metric("التغير", f"{info.get('regularMarketChangePercent', 0):.2f}%")
+    c3.metric("RSI (14)", f"{data['RSI'].iloc[-1]:.1f}")
+    c4.metric("حجم التداول", f"{info.get('volume', 0):,}")
+    c5.metric("المتوسط (10d)", f"{info.get('averageVolume', 0):,}")
 
-                # الرسم البياني (خطوط ناعمة مثل سهم)
-                fig = go.Figure(data=[go.Scatter(x=df.index, y=df['Close'], line=dict(color='#0ECB81', width=2), fill='tozeroy', fillcolor='rgba(14, 203, 129, 0.1)')])
-                fig.update_layout(template="plotly_white", height=400, margin=dict(l=0,r=0,t=0,b=0), xaxis_rangeslider_visible=False)
-                st.plotly_chart(fig, use_container_width=True)
-                
-                # الأهداف (تحت الرسم البياني)
-                st.markdown("### مستويات الأهداف (Predator Targets)")
-                st.markdown(f"""
-                <div class="target-grid">
-                    <div class="target-item" style="background-color: #007BFF;">هدف أول <br> {current_p*1.05:,.2f}</div>
-                    <div class="target-item" style="background-color: #F1B100;">هدف ثاني <br> {current_p*1.10:,.2f}</div>
-                    <div class="target-item" style="background-color: #6F42C1;">هدف ثالث <br> {current_p*1.15:,.2f}</div>
-                </div>
-                """, unsafe_allow_html=True)
-        except:
-            st.error("Please enter a valid symbol")
+    # الرسم البياني المركب
+    fig = make_subplots(rows=3, cols=1, shared_xaxes=True, vertical_spacing=0.03, row_heights=[0.6, 0.2, 0.2])
+    
+    # 1. الشموع والبولينجر
+    fig.add_trace(go.Candlestick(x=data.index, open=data['Open'], high=data['High'], low=data['Low'], close=data['Close'], name="Price"), row=1, col=1)
+    fig.add_trace(go.Scatter(x=data.index, y=data['BBU_20_2.0'], line=dict(color='gray', width=1, dash='dot'), name="Upper BB"), row=1, col=1)
+    fig.add_trace(go.Scatter(x=data.index, y=data['BBL_20_2.0'], line=dict(color='gray', width=1, dash='dot'), name="Lower BB"), row=1, col=1)
+    fig.add_trace(go.Scatter(x=data.index, y=data['SMA50'], line=dict(color='orange'), name="SMA 50"), row=1, col=1)
+    
+    # 2. RSI
+    fig.add_trace(go.Scatter(x=data.index, y=data['RSI'], line=dict(color='purple'), name="RSI"), row=2, col=1)
+    fig.add_hline(y=70, line_dash="dash", line_color="red", row=2, col=1)
+    fig.add_hline(y=30, line_dash="dash", line_color="green", row=2, col=1)
 
-# تذييل
-st.markdown("<center style='color:#848E9C; padding:20px;'>Yalla Scalp Pro | Powered by Global Data Feed</center>", unsafe_allow_html=True)
+    # 3. MACD
+    fig.add_trace(go.Bar(x=data.index, y=data['MACDh_12_26_9'], name="MACD Hist"), row=3, col=1)
+
+    fig.update_layout(template="plotly_dark", height=800, xaxis_rangeslider_visible=False)
+    st.plotly_chart(fig, use_container_width=True)
+
+with tab2: # البيانات المالية العميقة
+    st.header("📊 ميزانية الشركة وبياناتها")
+    f1, f2 = st.columns(2)
+    with f1:
+        st.write(f"**P/E Ratio:** {info.get('trailingPE', 'N/A')}")
+        st.write(f"**EPS:** {info.get('trailingEps', 'N/A')}")
+        st.write(f"**Market Cap:** {info.get('marketCap', 'N/A'):,}")
+        st.write(f"**Dividend Yield:** {info.get('dividendYield', 0)*100:.2f}%")
+    with f2:
+        st.write(f"**52 Week High:** ${info.get('fiftyTwoWeekHigh', 'N/A')}")
+        st.write(f"**52 Week Low:** ${info.get('fiftyTwoWeekLow', 'N/A')}")
+        st.write(f"**Short Ratio:** {info.get('shortRatio', 'N/A')}")
+        st.write(f"**Shares Outstanding:** {info.get('sharesOutstanding', 'N/A'):,}")
+
+with tab4: # إشارات الذكاء الاصطناعي (Logic Based)
+    st.header("🤖 تحليل Predator الذكي")
+    last_price = data['Close'].iloc[-1]
+    rsi_val = data['RSI'].iloc[-1]
+    sma50_val = data['SMA50'].iloc[-1]
+    
+    if last_price > sma50_val and rsi_val < 70:
+        st.markdown('<div class="buy-signal">✅ إشارة شراء: السهم فوق المتوسط RSI في منطقة آمنة</div>', unsafe_allow_html=True)
+    elif rsi_val > 70:
+        st.markdown('<div class="sell-signal">⚠️ إشارة بيع: تشبع شرائي عالٍ (RSI > 70)</div>', unsafe_allow_html=True)
+    else:
+        st.info("حالة الانتظار: لا توجد إشارة قوية حالياً.")
+
+with tab5: # حاسبة المخاطر
+    st.header("🛡️ إدارة المخاطر")
+    balance = st.number_input("رأس مال المحفظة ($)", value=10000)
+    risk_pct = st.slider("نسبة المخاطرة لكل صفقة (%)", 1, 5, 2)
+    stop_loss = st.number_input("سعر وقف الخسارة ($)", value=last_price*0.95)
+    
+    risk_amt = balance * (risk_pct/100)
+    pos_size = risk_amt / (last_price - stop_loss)
+    st.write(f"**الكمية المقترحة للشراء:** {int(pos_size)} سهم")
+    st.write(f"**أقصى خسارة مسموح بها:** ${risk_amt}")
+
+st.sidebar.markdown("---")
+st.sidebar.caption("Yalla Scalp Pro | النسخة الكاملة v4.0")
