@@ -12,10 +12,21 @@ st.set_page_config(page_title="منصة التحليل الفني", page_icon="�
                    layout="wide", initial_sidebar_state="collapsed")
 
 st.markdown("""
+<script>document.documentElement.lang='ar';document.documentElement.setAttribute('dir','rtl');</script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap');
 *,body,.stApp{font-family:'Tajawal',sans-serif!important;}
 body,.stApp{background:#080d15!important;color:#e2e8f0!important;direction:rtl;}
+/* Force English (Latin) numerals everywhere */
+*{font-variant-numeric:tabular-nums;unicode-bidi:plaintext;}
+.card-val,.m-val,.sig-box,.calc-result,.tgt-card,.calc-row,
+[data-testid="stMetricValue"],
+.stNumberInput input,.stTextInput input{
+    font-feature-settings:"tnum";
+    font-variant-numeric: tabular-nums;
+    direction:ltr;
+    unicode-bidi: embed;
+}
 .block-container{padding:1rem 1.5rem 2rem;max-width:1600px;}
 
 /* search */
@@ -195,7 +206,13 @@ def market_detect(ticker):
     if t.endswith(".SR"): return "SA","SAR","ر.س"
     return "US","USD","$"
 
-def fmt(v, d=2): return f"{v:,.{d}f}"
+def fmt(v, d=2):
+    result = f"{v:,.{d}f}"
+    ar_digits = '٠١٢٣٤٥٦٧٨٩'
+    en_digits = '0123456789'
+    for ar, en in zip(ar_digits, en_digits):
+        result = result.replace(ar, en)
+    return result
 
 # ═══════════════════════════════════════
 # MASTER SIGNAL SCORE  (all indicators)
@@ -654,7 +671,13 @@ if analyze and ticker:
             paper_bgcolor="#080d15",
             font=dict(family="Tajawal, sans-serif", color="#6b7280", size=11),
             margin=dict(l=4, r=120, t=16, b=4),
+            separators=",.",
         )
+        # Force English numerals on all axes
+        for axis in ['xaxis','xaxis2','xaxis3','xaxis4','xaxis5',
+                     'yaxis','yaxis2','yaxis3','yaxis4','yaxis5']:
+            if hasattr(fig.layout, axis):
+                getattr(fig.layout, axis).update(separators=",.")
         for ann in fig.layout.annotations:
             ann.font.size = 10; ann.font.color = "#6b7280"
 
