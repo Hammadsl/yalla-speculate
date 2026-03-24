@@ -4,466 +4,369 @@ import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
-import json, time
 from datetime import datetime
 import warnings
 warnings.filterwarnings('ignore')
 
-# ─── Page Config ─────────────────────────────────────────────────────────────
-st.set_page_config(
-    page_title="منصة التحليل الفني المتقدم",
-    page_icon="📊",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
+st.set_page_config(page_title="منصة التحليل الفني", page_icon="📊",
+                   layout="wide", initial_sidebar_state="collapsed")
 
-# ─── CSS ─────────────────────────────────────────────────────────────────────
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap');
-* { font-family: 'Tajawal', sans-serif !important; }
-body, .stApp { background-color: #060b16 !important; color: #e2e8f0 !important; direction: rtl; }
-.block-container { padding: 0.5rem 1rem 2rem; max-width: 1600px; }
+@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap');
+*,body,.stApp{font-family:'Tajawal',sans-serif!important;}
+body,.stApp{background:#080d15!important;color:#e2e8f0!important;direction:rtl;}
+.block-container{padding:1rem 1.5rem 2rem;max-width:1600px;}
 
-/* Search bar */
-.search-wrap {
-    background: #0d1320;
-    border: 1.5px solid #1e2d45;
-    border-radius: 20px;
-    padding: 28px 36px;
-    margin-bottom: 24px;
-    box-shadow: 0 4px 32px rgba(0,0,0,0.5);
-}
-.search-title {
-    font-size: 42px; font-weight: 800;
-    background: linear-gradient(90deg, #FFD700, #FFA500, #FF6B35);
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    text-align: center; margin-bottom: 4px;
-}
-.search-sub { text-align:center; color:#4a5568; font-size:14px; margin-bottom:20px; }
+/* search */
+.search-box{background:#0d1422;border:1px solid #1e2d45;border-radius:16px;padding:24px 28px;margin-bottom:18px;}
+.platform-title{font-size:34px;font-weight:800;color:#FFD700;text-align:center;margin-bottom:4px;letter-spacing:.5px;}
+.platform-sub{text-align:center;color:#374151;font-size:13px;margin-bottom:16px;}
 
-/* Signal boxes */
-.sig-enter-now   { background:#001a00; border:2.5px solid #00C851; border-radius:16px; padding:22px; text-align:center; }
-.sig-ready-enter { background:#0a2010; border:2.5px solid #7FD68A; border-radius:16px; padding:22px; text-align:center; }
-.sig-ready-exit  { background:#200808; border:2.5px solid #FF7070; border-radius:16px; padding:22px; text-align:center; }
-.sig-exit-now    { background:#180000; border:2.5px solid #CC0000; border-radius:16px; padding:22px; text-align:center; }
+/* signal */
+.sig-box{border-radius:14px;padding:20px 16px;text-align:center;}
+.sig-enter-now  {background:#001800;border:2px solid #00C851;}
+.sig-ready-enter{background:#0b1f0d;border:2px solid #5DBF6A;}
+.sig-ready-exit {background:#1f0808;border:2px solid #E06060;}
+.sig-exit-now   {background:#140000;border:2px solid #BB0000;}
 
-/* Metric cards */
-.m-card { background:#0d1320; border:1px solid #1e2d45; border-radius:12px; padding:14px 10px; text-align:center; margin-bottom:8px; }
-.m-label { color:#4a5568; font-size:11px; margin-bottom:4px; }
-.m-val { font-size:19px; font-weight:700; font-variant-numeric: tabular-nums; }
-.c-green { color:#00C851 !important; }
-.c-red   { color:#FF4444 !important; }
-.c-gold  { color:#FFD700 !important; }
-.c-gray  { color:#6b7280 !important; }
-.c-blue  { color:#60A5FA !important; }
-.c-orange{ color:#FB923C !important; }
+/* cards */
+.card{background:#0d1422;border:1px solid #1a2540;border-radius:10px;padding:12px 10px;text-align:center;}
+.card-lbl{color:#374151;font-size:11px;margin-bottom:3px;}
+.card-val{font-size:18px;font-weight:700;}
+.cg{color:#00C851!important;}.cr{color:#FF4444!important;}
+.cy{color:#FFD700!important;}.cb{color:#60A5FA!important;}.cw{color:#9ca3af!important;}
 
-/* Target cards */
-.t-card { background:#0d1320; border:1px solid #1e2d45; border-radius:12px; padding:14px 10px; text-align:center; }
+/* targets */
+.tgt-card{background:#0d1422;border:1px solid #1a2540;border-radius:10px;padding:14px 10px;text-align:center;}
 
-/* Section titles */
-.sec-title {
-    color:#FFD700; font-size:17px; font-weight:700;
-    margin:22px 0 10px; padding-right:10px;
-    border-right:4px solid #FFD700;
-}
+/* calculator */
+.calc-box{background:#0d1422;border:1px solid #1a2540;border-radius:14px;padding:18px 16px;}
+.calc-title{color:#FFD700;font-size:15px;font-weight:700;margin-bottom:14px;border-right:3px solid #FFD700;padding-right:8px;}
+.calc-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #111e30;font-size:13px;}
+.calc-result{background:#060c14;border-radius:10px;padding:12px;margin-top:12px;text-align:center;}
 
-/* Notification badge */
-.notif-badge {
-    background:#1e2d45; border:1px solid #2d4060; border-radius:10px;
-    padding:10px 14px; margin-bottom:6px; font-size:13px;
-    display:flex; align-items:center; gap:10px;
-}
+/* section title */
+.sec{color:#FFD700;font-size:15px;font-weight:700;margin:16px 0 8px;padding-right:8px;border-right:3px solid #FFD700;}
 
-/* Progress bar */
-.prog-bg { background:#1e2d45; border-radius:99px; height:8px; margin-top:6px; overflow:hidden; }
-.prog-fill { height:8px; border-radius:99px; transition:width 1s; }
+/* market/fear gauge */
+.gauge-box{background:#0d1422;border:1px solid #1a2540;border-radius:10px;padding:12px;text-align:center;}
 
-/* Table rows */
-.t-row {
-    display:grid; grid-template-columns: 140px 110px 1fr 30px;
-    padding:9px 12px; border-bottom:1px solid #0f1824;
-    align-items:center; font-size:13px;
-}
-.t-row:hover { background:#0d1a2a; }
+/* prog bar */
+.pb{background:#1a2540;border-radius:99px;height:7px;margin-top:5px;overflow:hidden;}
+.pf{height:7px;border-radius:99px;}
 
-/* Score ring */
-.score-ring { position:relative; display:inline-block; }
+/* indicator breakdown */
+.ind-row{display:flex;justify-content:space-between;padding:5px 8px;background:#060c14;border-radius:6px;margin-bottom:3px;font-size:12px;}
 
-/* Alerts panel */
-.alert-item {
-    background:#0d1320; border-left:4px solid #FFD700;
-    border-radius:8px; padding:10px 14px; margin-bottom:6px; font-size:13px;
-}
-
-/* Streamlit overrides */
-.stButton>button {
-    background:linear-gradient(90deg,#FFD700,#FFA500) !important;
-    color:#000 !important; font-weight:700 !important;
-    border:none !important; border-radius:12px !important;
-    font-size:15px !important; padding:10px 20px !important;
-}
-.stTextInput>div>input {
-    background:#0d1320 !important; border:1.5px solid #1e2d45 !important;
-    color:#e2e8f0 !important; border-radius:10px !important;
-    font-size:16px !important; font-family:'Tajawal' !important;
-}
-.stSelectbox>div>div {
-    background:#0d1320 !important; border:1px solid #1e2d45 !important;
-    color:#e2e8f0 !important;
-}
-div[data-testid="stSidebar"] { background:#06090f !important; border-right:1px solid #1e2d45; }
-.stCheckbox label { color:#9ca3af !important; }
-hr { border-color:#1e2d45 !important; }
+/* streamlit overrides */
+.stButton>button{background:linear-gradient(90deg,#FFD700,#FFA500)!important;color:#000!important;
+  font-weight:700!important;border:none!important;border-radius:10px!important;font-size:15px!important;}
+.stTextInput>div>input{background:#0d1422!important;border:1px solid #1e2d45!important;
+  color:#e2e8f0!important;border-radius:10px!important;font-size:15px!important;}
+.stNumberInput>div>div>input{background:#0d1422!important;border:1px solid #1e2d45!important;
+  color:#e2e8f0!important;border-radius:8px!important;}
+.stSelectbox>div>div{background:#0d1422!important;border:1px solid #1e2d45!important;color:#e2e8f0!important;}
+div[data-testid="stSidebar"]{background:#06090f!important;}
 </style>
 """, unsafe_allow_html=True)
 
-# ─── Browser Notification JS ──────────────────────────────────────────────────
-def inject_notification_js():
-    st.components.v1.html("""
-    <script>
-    window.addEventListener('message', function(e) {
-        if (e.data && e.data.type === 'STOCK_ALERT') {
-            const d = e.data;
-            if (Notification.permission === 'granted') {
-                new Notification(d.title, {body: d.body, icon: d.icon || ''});
-            } else if (Notification.permission !== 'denied') {
-                Notification.requestPermission().then(p => {
-                    if (p === 'granted')
-                        new Notification(d.title, {body: d.body});
-                });
-            }
-        }
-        if (e.data && e.data.type === 'REQUEST_NOTIF') {
-            Notification.requestPermission().then(p => {
-                window.parent.postMessage({type:'NOTIF_RESULT', permission: p}, '*');
-            });
-        }
-    });
-    </script>
-    """, height=0)
+# ═══════════════════════════════════════
+# INDICATOR FUNCTIONS
+# ═══════════════════════════════════════
 
-def send_browser_notification(title, body):
-    escaped_title = title.replace("'", "\\'")
-    escaped_body  = body.replace("'", "\\'")
-    st.components.v1.html(f"""
-    <script>
-    (function() {{
-        function tryNotify() {{
-            if (typeof Notification !== 'undefined') {{
-                if (Notification.permission === 'granted') {{
-                    new Notification('{escaped_title}', {{body: '{escaped_body}'}});
-                }} else if (Notification.permission !== 'denied') {{
-                    Notification.requestPermission().then(p => {{
-                        if (p === 'granted')
-                            new Notification('{escaped_title}', {{body: '{escaped_body}'}});
-                    }});
-                }}
-            }}
-        }}
-        tryNotify();
-    }})();
-    </script>
-    """, height=0)
+def f(s): return float(s.dropna().iloc[-1]) if len(s.dropna()) else 0.0
 
-# ─── Helper: detect market & currency ────────────────────────────────────────
-def detect_market(ticker: str):
-    t = ticker.upper()
-    if t.endswith(".SR"):
-        return "SA", "SAR", "ر.س"
-    elif t.endswith(".L"):
-        return "UK", "GBP", "£"
-    elif t.endswith(".PA") or t.endswith(".DE") or t.endswith(".MC"):
-        return "EU", "EUR", "€"
-    else:
-        return "US", "USD", "$"
+def calc_rsi(c, n=14):
+    d=c.diff(); g=d.clip(lower=0).rolling(n).mean(); l=(-d.clip(upper=0)).rolling(n).mean()
+    return 100-100/(1+g/(l+1e-9))
 
-def fmt_price(val, sym):
-    return f"{sym}{val:,.2f}"
+def calc_macd(c, fast=12, slow=26, sig=9):
+    ef=c.ewm(span=fast,adjust=False).mean(); es=c.ewm(span=slow,adjust=False).mean()
+    m=ef-es; s=m.ewm(span=sig,adjust=False).mean()
+    return m, s, m-s
 
-def fmt_num_en(val, decimals=2):
-    """Always return English numerals"""
-    return f"{val:,.{decimals}f}"
-
-# ─── Technical Indicators ─────────────────────────────────────────────────────
-
-def rsi(s, n=14):
-    d = s.diff(); g = d.clip(lower=0).rolling(n).mean(); l = (-d.clip(upper=0)).rolling(n).mean()
-    return 100 - 100/(1+g/(l+1e-10))
-
-def macd(s, f=12, sl=26, sig=9):
-    ef = s.ewm(span=f,adjust=False).mean(); es = s.ewm(span=sl,adjust=False).mean()
-    m = ef-es; sg = m.ewm(span=sig,adjust=False).mean()
-    return m, sg, m-sg
-
-def bb(s, n=20, k=2):
-    m = s.rolling(n).mean(); sd = s.rolling(n).std()
+def calc_bb(c, n=20, k=2):
+    m=c.rolling(n).mean(); sd=c.rolling(n).std()
     return m+k*sd, m, m-k*sd
 
-def stoch(h,l,c,kp=14,dp=3):
+def calc_stoch(h, l, c, kp=14, dp=3):
     ll=l.rolling(kp).min(); hh=h.rolling(kp).max()
-    k=100*(c-ll)/(hh-ll+1e-10); return k, k.rolling(dp).mean()
+    k=100*(c-ll)/(hh-ll+1e-9)
+    return k, k.rolling(dp).mean()
 
-def atr(h,l,c,n=14):
+def calc_atr(h, l, c, n=14):
     tr=pd.concat([(h-l),(h-c.shift()).abs(),(l-c.shift()).abs()],axis=1).max(axis=1)
     return tr.rolling(n).mean()
 
-def adx(h,l,c,n=14):
-    tr = pd.concat([(h-l),(h-c.shift()).abs(),(l-c.shift()).abs()],axis=1).max(axis=1)
-    dmp = (h-h.shift()).clip(lower=0); dmm = (l.shift()-l).clip(lower=0)
-    dmp = dmp.where(dmp>dmm, 0); dmm = dmm.where(dmm>dmp, 0)
-    atr14 = tr.ewm(span=n,adjust=False).mean()
-    dip = 100*(dmp.ewm(span=n,adjust=False).mean()/(atr14+1e-10))
-    dim = 100*(dmm.ewm(span=n,adjust=False).mean()/(atr14+1e-10))
-    dx  = 100*(dip-dim).abs()/(dip+dim+1e-10)
+def calc_adx(h, l, c, n=14):
+    tr=pd.concat([(h-l),(h-c.shift()).abs(),(l-c.shift()).abs()],axis=1).max(axis=1)
+    dmp=(h-h.shift()).clip(lower=0); dmm=(l.shift()-l).clip(lower=0)
+    dmp=dmp.where(dmp>dmm,0); dmm=dmm.where(dmm>dmp,0)
+    a=tr.ewm(span=n,adjust=False).mean()
+    dip=100*dmp.ewm(span=n,adjust=False).mean()/(a+1e-9)
+    dim=100*dmm.ewm(span=n,adjust=False).mean()/(a+1e-9)
+    dx=100*(dip-dim).abs()/(dip+dim+1e-9)
     return dx.ewm(span=n,adjust=False).mean(), dip, dim
 
-def cci(h,l,c,n=20):
-    tp=(h+l+c)/3; return (tp-tp.rolling(n).mean())/(0.015*tp.rolling(n).std()+1e-10)
+def calc_cci(h, l, c, n=20):
+    tp=(h+l+c)/3
+    return (tp-tp.rolling(n).mean())/(0.015*tp.rolling(n).std()+1e-9)
 
-def williams_r(h,l,c,n=14):
+def calc_wr(h, l, c, n=14):
     hh=h.rolling(n).max(); ll=l.rolling(n).min()
-    return -100*(hh-c)/(hh-ll+1e-10)
+    return -100*(hh-c)/(hh-ll+1e-9)
 
-def mfi(h,l,c,vol,n=14):
-    tp=(h+l+c)/3; mf=tp*vol
+def calc_mfi(h, l, c, v, n=14):
+    tp=(h+l+c)/3; mf=tp*v
     pos=mf.where(tp>tp.shift(),0).rolling(n).sum()
     neg=mf.where(tp<tp.shift(),0).rolling(n).sum()
-    return 100-100/(1+pos/(neg+1e-10))
+    return 100-100/(1+pos/(neg+1e-9))
 
-def obv(c,vol):
-    return (np.sign(c.diff())*vol).fillna(0).cumsum()
+def calc_obv(c, v):
+    return (np.sign(c.diff())*v).fillna(0).cumsum()
 
-def vwap(h,l,c,vol):
-    tp=(h+l+c)/3; return (tp*vol).cumsum()/(vol.cumsum()+1e-10)
+def calc_cmf(h, l, c, v, n=20):
+    mfv=((c-l)-(h-c))/(h-l+1e-9)*v
+    return mfv.rolling(n).sum()/(v.rolling(n).sum()+1e-9)
 
-def cmf(h,l,c,vol,n=20):
-    mfv=((c-l)-(h-c))/(h-l+1e-10)*vol
-    return mfv.rolling(n).sum()/(vol.rolling(n).sum()+1e-10)
-
-def parabolic_sar(h,l,af_step=0.02,af_max=0.2):
+def calc_sar(h, l, af=0.02, af_max=0.2):
     sar=np.zeros(len(h)); trend=np.ones(len(h))
-    sar[0]=l.iloc[0]; ep=h.iloc[0]; af=af_step
+    sar[0]=float(l.iloc[0]); ep=float(h.iloc[0]); a=af
     for i in range(1,len(h)):
-        prev_sar=sar[i-1]
+        ps=sar[i-1]
         if trend[i-1]==1:
-            sar[i]=prev_sar+af*(ep-prev_sar)
-            sar[i]=min(sar[i],l.iloc[max(0,i-1)],l.iloc[max(0,i-2)])
-            if l.iloc[i]<sar[i]:
-                trend[i]=-1; sar[i]=ep; ep=l.iloc[i]; af=af_step
+            sar[i]=ps+a*(ep-ps)
+            sar[i]=min(sar[i],float(l.iloc[max(0,i-1)]),float(l.iloc[max(0,i-2)]))
+            if float(l.iloc[i])<sar[i]: trend[i]=-1; sar[i]=ep; ep=float(l.iloc[i]); a=af
             else:
                 trend[i]=1
-                if h.iloc[i]>ep: ep=h.iloc[i]; af=min(af+af_step,af_max)
+                if float(h.iloc[i])>ep: ep=float(h.iloc[i]); a=min(a+af,af_max)
         else:
-            sar[i]=prev_sar+af*(ep-prev_sar)
-            sar[i]=max(sar[i],h.iloc[max(0,i-1)],h.iloc[max(0,i-2)])
-            if h.iloc[i]>sar[i]:
-                trend[i]=1; sar[i]=ep; ep=h.iloc[i]; af=af_step
+            sar[i]=ps+a*(ep-ps)
+            sar[i]=max(sar[i],float(h.iloc[max(0,i-1)]),float(h.iloc[max(0,i-2)]))
+            if float(h.iloc[i])>sar[i]: trend[i]=1; sar[i]=ep; ep=float(h.iloc[i]); a=af
             else:
                 trend[i]=-1
-                if l.iloc[i]<ep: ep=l.iloc[i]; af=min(af+af_step,af_max)
-    return pd.Series(sar, index=h.index), pd.Series(trend, index=h.index)
+                if float(l.iloc[i])<ep: ep=float(l.iloc[i]); a=min(a+af,af_max)
+    return pd.Series(sar,index=h.index), pd.Series(trend,index=h.index)
 
-def pivot_points(h,l,c):
-    p=(h+l+c)/3
-    return {"P":p,"R1":2*p-l,"R2":p+(h-l),"R3":h+2*(p-l),
-            "S1":2*p-h,"S2":p-(h-l),"S3":l-2*(h-p)}
+def calc_fibonacci(c):
+    hi=float(c.tail(60).max()); lo=float(c.tail(60).min()); d=hi-lo
+    return {"0%":hi,"23.6%":hi-0.236*d,"38.2%":hi-0.382*d,
+            "50%":hi-0.5*d,"61.8%":hi-0.618*d,"100%":lo}
 
-def fibonacci_levels(h,l):
-    diff=h-l
-    return {
-        "0%":h,"23.6%":h-0.236*diff,"38.2%":h-0.382*diff,
-        "50%":h-0.5*diff,"61.8%":h-0.618*diff,"78.6%":h-0.786*diff,"100%":l
-    }
+def calc_pivot(h, l, c):
+    hv=float(h.tail(20).max()); lv=float(l.tail(20).min()); cv=float(c.iloc[-1])
+    p=(hv+lv+cv)/3
+    return {"P":p,"R1":2*p-lv,"R2":p+(hv-lv),"S1":2*p-hv,"S2":p-(hv-lv)}
 
-def aroon(h,l,n=25):
-    ai=(h.rolling(n+1).apply(lambda x:x.argmax())/n)*100
-    ad=(l.rolling(n+1).apply(lambda x:x.argmin())/n)*100
-    return ai,ad
-
-def keltner(h,l,c,n=20,mult=2):
-    mid=c.ewm(span=n,adjust=False).mean(); a=atr(h,l,c,n)
-    return mid+mult*a, mid, mid-mult*a
-
-def ultimate_oscillator(h,l,c,p1=7,p2=14,p3=28):
-    bp=c-pd.concat([l,c.shift()],axis=1).min(axis=1)
-    tr_=pd.concat([(h-l),(h-c.shift()).abs(),(l-c.shift()).abs()],axis=1).max(axis=1)
-    avg1=bp.rolling(p1).sum()/(tr_.rolling(p1).sum()+1e-10)
-    avg2=bp.rolling(p2).sum()/(tr_.rolling(p2).sum()+1e-10)
-    avg3=bp.rolling(p3).sum()/(tr_.rolling(p3).sum()+1e-10)
-    return 100*(4*avg1+2*avg2+avg3)/7
-
-def volume_profile(close, volume, bins=20):
-    mn,mx=close.min(),close.max()
-    edges=np.linspace(mn,mx,bins+1)
-    vols=[]
-    for i in range(bins):
-        mask=(close>=edges[i])&(close<edges[i+1])
-        vols.append(volume[mask].sum())
-    poc_idx=np.argmax(vols)
-    return edges, np.array(vols), (edges[poc_idx]+edges[poc_idx+1])/2
-
-# ─── Master Scoring ───────────────────────────────────────────────────────────
-def master_score(rsi_v,macd_v,macd_sv,price,sma20,sma50,sma200,
-                 stk,bb_u,bb_l,vol,avg_vol,adx_v,dip,dim,
-                 cci_v,wr_v,mfi_v,cmf_v,sar_trend):
-    sc=50
-    # RSI (15pts)
-    if 30<rsi_v<50: sc+=10
-    elif 50<=rsi_v<65: sc+=15
-    elif 65<=rsi_v<70: sc+=5
-    elif rsi_v>=70: sc-=20
-    elif rsi_v<=30: sc+=8
-    # MACD (18pts)
-    if macd_v>macd_sv: sc+=18
-    else: sc-=18
-    # MAs (20pts)
-    if price>sma20: sc+=5
-    if price>sma50: sc+=7
-    if price>sma200: sc+=8
-    # ADX (10pts)
-    if adx_v>25:
-        if dip>dim: sc+=10
-        else: sc-=10
-    # Stochastic (8pts)
-    if stk<20: sc+=8
-    elif stk>80: sc-=8
-    elif stk<40: sc+=4
-    # Bollinger (6pts)
-    if price<bb_l: sc+=6
-    elif price>bb_u: sc-=6
-    # CCI (6pts)
-    if cci_v<-100: sc+=6
-    elif cci_v>100: sc-=6
-    elif -50<cci_v<50: sc+=3
-    # Williams %R (5pts)
-    if wr_v<-80: sc+=5
-    elif wr_v>-20: sc-=5
-    # MFI (5pts)
-    if mfi_v<20: sc+=5
-    elif mfi_v>80: sc-=5
-    # CMF (5pts)
-    if cmf_v>0.1: sc+=5
-    elif cmf_v<-0.1: sc-=5
-    # Volume (5pts)
-    if vol>avg_vol*1.8: sc+=5
-    elif vol<avg_vol*0.4: sc-=3
-    # Parabolic SAR (5pts)
-    if sar_trend==1: sc+=5
-    else: sc-=5
-    return max(0,min(100,int(sc)))
-
-def signal_info(score):
-    if score>=65:
-        return {"label":"دخول الآن","icon":"▲","cls":"sig-enter-now",
-                "color":"#00C851","type":"buy","en":"BUY NOW"}
-    elif score>=45:
-        return {"label":"استعداد دخول","icon":"◆","cls":"sig-ready-enter",
-                "color":"#7FD68A","type":"watch_buy","en":"READY TO BUY"}
-    elif score>=28:
-        return {"label":"استعداد خروج","icon":"◆","cls":"sig-ready-exit",
-                "color":"#FF7070","type":"watch_sell","en":"READY TO SELL"}
-    else:
-        return {"label":"خروج الآن","icon":"▼","cls":"sig-exit-now",
-                "color":"#CC0000","type":"sell","en":"SELL NOW"}
-
-def calc_targets(price, atr_v, sig_type, sym):
+def smart_targets(px, atr_v, sig_type, fibs, pivots):
+    """Hybrid targets: Fibonacci + Pivot + ATR"""
     if sig_type in ("buy","watch_buy"):
+        fib382 = fibs["38.2%"]; fib618 = fibs["61.8%"]
+        r1=pivots["R1"]; r2=pivots["R2"]
+        t1 = fib382 if fib382 > px else px + atr_v*1.5
+        t2 = r1     if r1 > t1    else px + atr_v*3.0
+        t3 = r2     if r2 > t2    else fib618 if fib618>t2 else px+atr_v*5.0
+        sl = pivots["S1"] if pivots["S1"] < px else px - atr_v*2.0
         return [
-            ("🎯 الهدف 1",  round(price+atr_v*1.5,2),  "#00C851"),
-            ("🎯 الهدف 2",  round(price+atr_v*3.0,2),  "#00A040"),
-            ("🎯 الهدف 3",  round(price+atr_v*5.0,2),  "#007030"),
-            ("🛑 وقف الخسارة",round(price-atr_v*2.0,2),"#FF4444"),
+            ("🎯 الهدف 1", round(t1,2), "#00C851"),
+            ("🎯 الهدف 2", round(t2,2), "#00A040"),
+            ("🎯 الهدف 3", round(t3,2), "#007030"),
+            ("🛑 وقف الخسارة", round(sl,2), "#FF4444"),
         ]
     else:
+        s1=pivots["S1"]; s2=pivots["S2"]
+        fib382=fibs["38.2%"]; fib618=fibs["61.8%"]
+        t1 = s1      if s1 < px else px - atr_v*1.5
+        t2 = s2      if s2 < t1 else px - atr_v*3.0
+        t3 = fib618  if fib618 < t2 else px - atr_v*5.0
+        sl = pivots["R1"] if pivots["R1"] > px else px + atr_v*2.0
         return [
-            ("📉 هدف هبوط 1",round(price-atr_v*1.5,2),"#FF4444"),
-            ("📉 هدف هبوط 2",round(price-atr_v*3.0,2),"#CC2222"),
-            ("📉 هدف هبوط 3",round(price-atr_v*5.0,2),"#990000"),
-            ("↩️ إعادة دخول",round(price-atr_v*5.5,2),"#FFD700"),
+            ("📉 هدف هبوط 1", round(t1,2), "#FF6644"),
+            ("📉 هدف هبوط 2", round(t2,2), "#CC3322"),
+            ("📉 هدف هبوط 3", round(t3,2), "#AA1100"),
+            ("↩️ إعادة دخول",  round(sl,2), "#FFD700"),
         ]
 
-def interp(val, lo, hi, lo_lbl, hi_lbl, ok_lbl):
-    if val<=lo: return lo_lbl,"#00C851"
-    if val>=hi: return hi_lbl,"#FF4444"
-    return ok_lbl,"#FFD700"
+def market_detect(ticker):
+    t=ticker.upper()
+    if t.endswith(".SR"): return "SA","SAR","ر.س"
+    return "US","USD","$"
 
-# ─── Sidebar ──────────────────────────────────────────────────────────────────
-with st.sidebar:
-    st.markdown("<h2 style='color:#FFD700;text-align:center'>⚙️ الإعدادات</h2>", unsafe_allow_html=True)
+def fmt(v, d=2): return f"{v:,.{d}f}"
 
-    period   = st.selectbox("📅 الفترة",   ["1mo","3mo","6mo","1y","2y"], index=2)
-    interval = st.selectbox("⏱️ الإطار",   ["1d","1wk","1mo"], index=0,
-                             format_func=lambda x:{"1d":"يومي","1wk":"أسبوعي","1mo":"شهري"}[x])
-    st.markdown("---")
-    st.markdown("<div style='color:#FFD700;font-weight:700;margin-bottom:8px'>📊 المؤشرات</div>", unsafe_allow_html=True)
-    show_bb    = st.checkbox("بولينجر باند",    value=True)
-    show_kc    = st.checkbox("Keltner Channel", value=True)
-    show_sar   = st.checkbox("Parabolic SAR",   value=True)
-    show_ema   = st.checkbox("EMA 9/20/50",     value=True)
-    show_vwap  = st.checkbox("VWAP",            value=True)
-    st.markdown("---")
-    st.markdown("<div style='color:#FFD700;font-weight:700;margin-bottom:8px'>🔔 التنبيهات</div>", unsafe_allow_html=True)
-    alert_rsi_hi = st.number_input("تنبيه RSI فوق", min_value=60, max_value=95, value=70, step=1)
-    alert_rsi_lo = st.number_input("تنبيه RSI تحت", min_value=10, max_value=40, value=30, step=1)
-    enable_notif = st.checkbox("تفعيل تنبيهات المتصفح", value=True)
-    st.markdown("---")
-    st.markdown("<p style='color:#374151;font-size:11px;text-align:center'>للأغراض التعليمية فقط. ليست توصية استثمارية.</p>", unsafe_allow_html=True)
+# ═══════════════════════════════════════
+# MASTER SIGNAL SCORE  (all indicators)
+# ═══════════════════════════════════════
 
-# ─── Header ───────────────────────────────────────────────────────────────────
-inject_notification_js()
+def master_score(rsi, macd, macd_s, px, ema20, ema50, sma200,
+                 stk, bbu, bbl, vol, vol_avg,
+                 adx, dip, dim, cci, wr, mfi, cmf, sar_tr):
+    sc = 50
+    indicators = {}
+
+    # RSI
+    if rsi < 30:    sc+=8;  indicators["RSI"]="ذروة بيع 🟢"
+    elif rsi < 45:  sc+=10; indicators["RSI"]="قوة صعودية 🟢"
+    elif rsi < 60:  sc+=5;  indicators["RSI"]="محايد ⚪"
+    elif rsi < 70:  sc+=0;  indicators["RSI"]="قريب الذروة 🟡"
+    else:           sc-=20; indicators["RSI"]="ذروة شراء 🔴"
+
+    # MACD
+    if macd > macd_s: sc+=18; indicators["MACD"]="صاعد ✅"
+    else:             sc-=18; indicators["MACD"]="هابط ❌"
+
+    # Moving Averages
+    ma_pts = 0
+    if px > ema20:  ma_pts += 5
+    if px > ema50:  ma_pts += 7
+    if px > sma200: ma_pts += 8
+    sc += ma_pts - 10
+    indicators["MA"] = "فوق المتوسطات 🟢" if ma_pts >= 15 else "تحت المتوسطات 🔴" if ma_pts <= 5 else "مختلطة ⚪"
+
+    # ADX
+    if adx > 25:
+        if dip > dim: sc+=10; indicators["ADX"]="اتجاه صاعد قوي 🟢"
+        else:         sc-=10; indicators["ADX"]="اتجاه هابط قوي 🔴"
+    else: sc+=0; indicators["ADX"]="تداول جانبي ⚪"
+
+    # Stochastic
+    if stk < 20:    sc+=8;  indicators["Stoch"]="ذروة بيع 🟢"
+    elif stk > 80:  sc-=8;  indicators["Stoch"]="ذروة شراء 🔴"
+    else:           sc+=2;  indicators["Stoch"]="محايد ⚪"
+
+    # Bollinger
+    if px < bbl:    sc+=6;  indicators["BB"]="تحت النطاق 🟢"
+    elif px > bbu:  sc-=6;  indicators["BB"]="فوق النطاق 🔴"
+    else:           sc+=1;  indicators["BB"]="داخل النطاق ⚪"
+
+    # CCI
+    if cci < -100:  sc+=5;  indicators["CCI"]="ذروة بيع 🟢"
+    elif cci > 100: sc-=5;  indicators["CCI"]="ذروة شراء 🔴"
+    else:           sc+=1;  indicators["CCI"]="محايد ⚪"
+
+    # Williams %R
+    if wr < -80:    sc+=5;  indicators["W%R"]="ذروة بيع 🟢"
+    elif wr > -20:  sc-=5;  indicators["W%R"]="ذروة شراء 🔴"
+    else:           sc+=1;  indicators["W%R"]="محايد ⚪"
+
+    # MFI
+    if mfi < 20:    sc+=4;  indicators["MFI"]="ضغط بيع 🟢"
+    elif mfi > 80:  sc-=4;  indicators["MFI"]="ضغط شراء 🔴"
+    else:           sc+=1;  indicators["MFI"]="طبيعي ⚪"
+
+    # CMF
+    if cmf > 0.1:   sc+=5;  indicators["CMF"]="تدفق شراء 🟢"
+    elif cmf < -0.1:sc-=5;  indicators["CMF"]="تدفق بيع 🔴"
+    else:           sc+=0;  indicators["CMF"]="محايد ⚪"
+
+    # Volume
+    vr = vol/(vol_avg+1e-9)
+    if vr > 1.5:    sc+=5;  indicators["Volume"]="تأكيد حجم 🟢"
+    elif vr < 0.5:  sc-=3;  indicators["Volume"]="حجم ضعيف 🔴"
+    else:           sc+=1;  indicators["Volume"]="طبيعي ⚪"
+
+    # SAR
+    if sar_tr == 1: sc+=5;  indicators["SAR"]="اتجاه صاعد 🟢"
+    else:           sc-=5;  indicators["SAR"]="اتجاه هابط 🔴"
+
+    return max(0, min(100, int(sc))), indicators
+
+def signal_from_score(score):
+    if score >= 65:
+        return {"label":"دخول الآن","en":"BUY NOW","icon":"▲",
+                "cls":"sig-enter-now","color":"#00C851","type":"buy"}
+    elif score >= 45:
+        return {"label":"استعداد دخول","en":"READY TO BUY","icon":"◆",
+                "cls":"sig-ready-enter","color":"#5DBF6A","type":"watch_buy"}
+    elif score >= 28:
+        return {"label":"استعداد خروج","en":"READY TO SELL","icon":"◆",
+                "cls":"sig-ready-exit","color":"#E06060","type":"watch_sell"}
+    else:
+        return {"label":"خروج الآن","en":"SELL NOW","icon":"▼",
+                "cls":"sig-exit-now","color":"#BB0000","type":"sell"}
+
+def fear_greed(rsi, stk, bbu, bbl, px, vol, vol_avg):
+    score = 50
+    if rsi > 70: score += 25
+    elif rsi < 30: score -= 25
+    else: score += (rsi - 50) * 0.5
+    if stk > 80: score += 15
+    elif stk < 20: score -= 15
+    bp = (px - bbl) / (bbu - bbl + 1e-9) * 100
+    score += (bp - 50) * 0.2
+    vr = vol / (vol_avg + 1e-9)
+    if vr > 1.5: score += 10
+    score = max(0, min(100, score))
+    if score >= 75: return score, "جشع شديد 🤑", "#FF4444"
+    elif score >= 55: return score, "جشع 😊", "#FF9800"
+    elif score >= 45: return score, "محايد 😐", "#FFD700"
+    elif score >= 25: return score, "خوف 😟", "#60A5FA"
+    else: return score, "خوف شديد 😱", "#00C851"
+
+def market_state(px, ema20, ema50, sma200, adx):
+    if px > ema50 and px > sma200 and adx > 25:
+        return "📈 اتجاه صاعد قوي", "#00C851"
+    elif px < ema50 and px < sma200 and adx > 25:
+        return "📉 اتجاه هابط قوي", "#FF4444"
+    elif adx < 20:
+        return "📊 تداول جانبي", "#FFD700"
+    elif px > ema50:
+        return "📈 صاعد معتدل", "#5DBF6A"
+    else:
+        return "📉 هابط معتدل", "#E06060"
+
+# ═══════════════════════════════════════
+# HEADER
+# ═══════════════════════════════════════
 
 st.markdown("""
-<div class="search-wrap">
-  <div class="search-title">📊 منصة التحليل الفني المتقدم</div>
-  <div class="search-sub">RSI • MACD • Bollinger • Stochastic • ADX • CCI • Williams %R • MFI • VWAP • Parabolic SAR • Aroon • CMF • Fibonacci • Pivot Points</div>
+<div class="search-box">
+  <div class="platform-title">📊 منصة التحليل الفني المتقدم</div>
+  <div class="platform-sub">أسعار مباشرة • تحليل احترافي • حاسبة الأرباح</div>
 </div>
 """, unsafe_allow_html=True)
 
-# ─── Search Bar ───────────────────────────────────────────────────────────────
-col_inp, col_btn = st.columns([5,1])
-with col_inp:
-    ticker = st.text_input(
-        "", placeholder="ابحث عن السهم — مثال: AAPL  •  2222.SR  •  TSLA  •  1120.SR  •  MSFT",
-        label_visibility="collapsed"
-    ).upper().strip()
-with col_btn:
+# ═══════════════════════════════════════
+# SEARCH
+# ═══════════════════════════════════════
+col_s, col_b, col_p, col_i = st.columns([4, 1, 1.5, 1.5])
+with col_s:
+    ticker = st.text_input("", placeholder="رمز السهم — مثال: 2222.SR أو AAPL",
+                           label_visibility="collapsed").upper().strip()
+with col_b:
     analyze = st.button("🔍 تحليل", use_container_width=True)
+with col_p:
+    period = st.selectbox("", ["3mo","6mo","1y","2y"], index=1,
+                          format_func=lambda x:{"3mo":"3 أشهر","6mo":"6 أشهر","1y":"سنة","2y":"سنتين"}[x],
+                          label_visibility="collapsed")
+with col_i:
+    interval = st.selectbox("", ["1d","1wk"], index=0,
+                            format_func=lambda x:{"1d":"يومي","1wk":"أسبوعي"}[x],
+                            label_visibility="collapsed")
 
-# Quick picks
-st.markdown("""
-<div style="display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 20px;direction:rtl">
-<span style="color:#4a5568;font-size:13px;padding-top:2px">أسهم سريعة:</span>
-</div>
-""", unsafe_allow_html=True)
-qcols = st.columns(10)
-quick = ["AAPL","MSFT","TSLA","NVDA","AMZN","2222.SR","1120.SR","2010.SR","7010.SR","1150.SR"]
-for i, q in enumerate(quick):
-    with qcols[i]:
-        if st.button(q, key=f"q_{q}"):
-            ticker = q
-            analyze = True
-
-# ─── MAIN ANALYSIS ────────────────────────────────────────────────────────────
+# ═══════════════════════════════════════
+# MAIN ANALYSIS
+# ═══════════════════════════════════════
 if analyze and ticker:
-    market, currency, sym = detect_market(ticker)
+    market, currency, sym = market_detect(ticker)
 
-    with st.spinner(f"⏳ جاري تحليل {ticker} ..."):
+    with st.spinner("⏳ جاري تحميل البيانات وتحليل كل المؤشرات..."):
         try:
             data = yf.download(ticker, period=period, interval=interval,
                                progress=False, auto_adjust=True)
-            info = {}
             try:
-                tk_obj = yf.Ticker(ticker)
-                info   = tk_obj.info or {}
-            except: pass
+                info = yf.Ticker(ticker).info or {}
+            except:
+                info = {}
         except Exception as e:
             st.error(f"❌ خطأ: {e}"); st.stop()
 
-    if data is None or data.empty or len(data) < 35:
-        st.error("❌ بيانات غير كافية. تحقق من رمز السهم.")
-        st.info("💡 السوق السعودي: أضف .SR مثل 2222.SR • السوق الأمريكي: AAPL, TSLA, MSFT")
+    if data is None or data.empty or len(data) < 30:
+        st.error("❌ بيانات غير كافية. تحقق من الرمز.")
+        st.info("💡 السعودي: 2222.SR | الأمريكي: AAPL, TSLA, MSFT")
         st.stop()
 
     if isinstance(data.columns, pd.MultiIndex):
@@ -475,483 +378,316 @@ if analyze and ticker:
     V = data["Volume"].astype(float)
     O = data["Open"].astype(float)
 
-    # ── Compute all indicators ──
-    rsi_s               = rsi(C)
-    macd_line,sig_line,hist_line = macd(C)
-    ema9_s              = C.ewm(span=9,adjust=False).mean()
-    ema20_s             = C.ewm(span=20,adjust=False).mean()
-    ema50_s             = C.ewm(span=50,adjust=False).mean()
-    sma200_s            = C.rolling(200).mean()
-    bb_u,bb_m,bb_l      = bb(C)
-    kc_u,kc_m,kc_l      = keltner(H,L,C)
-    stk_s,std_s         = stoch(H,L,C)
-    atr_s               = atr(H,L,C)
-    adx_s,dip_s,dim_s   = adx(H,L,C)
-    cci_s               = cci(H,L,C)
-    wr_s                = williams_r(H,L,C)
-    mfi_s               = mfi(H,L,C,V)
-    obv_s               = obv(C,V)
-    vwap_s              = vwap(H,L,C,V)
-    cmf_s               = cmf(H,L,C,V)
-    uo_s                = ultimate_oscillator(H,L,C)
-    sar_s, trend_s      = parabolic_sar(H,L)
-    aroon_up,aroon_dn   = aroon(H,L)
-    vol_ma20            = V.rolling(20).mean()
+    # ── All indicators (background) ──
+    rsi_s             = calc_rsi(C)
+    macd_l, macd_s, macd_h = calc_macd(C)
+    bbu_s, bbm_s, bbl_s   = calc_bb(C)
+    stk_s, std_s          = calc_stoch(H, L, C)
+    atr_s                 = calc_atr(H, L, C)
+    adx_s, dip_s, dim_s   = calc_adx(H, L, C)
+    cci_s                 = calc_cci(H, L, C)
+    wr_s                  = calc_wr(H, L, C)
+    mfi_s                 = calc_mfi(H, L, C, V)
+    obv_s                 = calc_obv(C, V)
+    cmf_s                 = calc_cmf(H, L, C, V)
+    sar_s, sar_tr_s       = calc_sar(H, L)
+    ema20_s               = C.ewm(span=20, adjust=False).mean()
+    ema50_s               = C.ewm(span=50, adjust=False).mean()
+    sma200_s              = C.rolling(200).mean()
+    vol_ma20              = V.rolling(20).mean()
+    fibs                  = calc_fibonacci(C)
+    pivots                = calc_pivot(H, L, C)
 
-    def last(s): return float(s.dropna().iloc[-1]) if len(s.dropna()) else 0.0
+    # Latest values
+    px       = float(C.iloc[-1])
+    rsi_v    = f(rsi_s)
+    macd_v   = f(macd_l); macd_sv = f(macd_s)
+    bbu_v    = f(bbu_s);  bbl_v   = f(bbl_s); bbm_v = f(bbm_s)
+    stk_v    = f(stk_s);  std_v   = f(std_s)
+    atr_v    = f(atr_s)
+    adx_v    = f(adx_s);  dip_v   = f(dip_s); dim_v = f(dim_s)
+    cci_v    = f(cci_s)
+    wr_v     = f(wr_s)
+    mfi_v    = f(mfi_s)
+    cmf_v    = f(cmf_s)
+    sar_tr_v = float(sar_tr_s.iloc[-1])
+    ema20_v  = f(ema20_s); ema50_v = f(ema50_s); sma200_v = f(sma200_s)
+    vol_v    = float(V.iloc[-1]); vol_avg = f(vol_ma20)
+    prev_px  = float(C.iloc[-2]) if len(C) > 1 else px
+    chg_pct  = (px - prev_px) / prev_px * 100
 
-    px       = last(C)
-    rsi_v    = last(rsi_s)
-    macd_v   = last(macd_line)
-    macd_sv  = last(sig_line)
-    ema9_v   = last(ema9_s)
-    ema20_v  = last(ema20_s)
-    ema50_v  = last(ema50_s)
-    sma200_v = last(sma200_s)
-    bbu_v    = last(bb_u); bbm_v=last(bb_m); bbl_v=last(bb_l)
-    kcu_v    = last(kc_u); kcl_v=last(kc_l)
-    stk_v    = last(stk_s); std_v=last(std_s)
-    atr_v    = last(atr_s)
-    adx_v    = last(adx_s); dip_v=last(dip_s); dim_v=last(dim_s)
-    cci_v    = last(cci_s)
-    wr_v     = last(wr_s)
-    mfi_v    = last(mfi_s)
-    obv_v    = last(obv_s)
-    vwap_v   = last(vwap_s)
-    cmf_v    = last(cmf_s)
-    uo_v     = last(uo_s)
-    sar_v    = float(sar_s.iloc[-1])
-    sar_tr   = float(trend_s.iloc[-1])
-    aroon_u  = last(aroon_up); aroon_d=last(aroon_dn)
-    vol_v    = float(V.iloc[-1]); vol_avg=last(vol_ma20)
-    prev_px  = float(C.iloc[-2]) if len(C)>1 else px
-    chg_pct  = (px-prev_px)/prev_px*100
+    # Score + signal
+    score, ind_breakdown = master_score(
+        rsi_v, macd_v, macd_sv, px, ema20_v, ema50_v, sma200_v,
+        stk_v, bbu_v, bbl_v, vol_v, vol_avg,
+        adx_v, dip_v, dim_v, cci_v, wr_v, mfi_v, cmf_v, sar_tr_v)
+    sig = signal_from_score(score)
 
-    # Pivot & Fibonacci
-    piv = pivot_points(last(H.rolling(1).max()), last(L.rolling(1).min()), px)
-    fib_h = float(C.tail(50).max()); fib_l = float(C.tail(50).min())
-    fibs = fibonacci_levels(fib_h, fib_l)
+    # Targets (hybrid: Fib + Pivot + ATR)
+    targets = smart_targets(px, atr_v, sig["type"], fibs, pivots)
 
-    # Volume profile
-    vp_edges, vp_vols, poc = volume_profile(C, V)
+    # Fear & Greed
+    fg_score, fg_label, fg_color = fear_greed(rsi_v, stk_v, bbu_v, bbl_v, px, vol_v, vol_avg)
 
-    # Score & signal
-    score = master_score(rsi_v,macd_v,macd_sv,px,ema20_v,ema50_v,sma200_v,
-                          stk_v,bbu_v,bbl_v,vol_v,vol_avg,adx_v,dip_v,dim_v,
-                          cci_v,wr_v,mfi_v,cmf_v,sar_tr)
-    sig   = signal_info(score)
-    targets = calc_targets(px, atr_v, sig["type"], sym)
+    # Market state
+    mkt_label, mkt_color = market_state(px, ema20_v, ema50_v, sma200_v, adx_v)
 
-    company_name = info.get("longName", ticker) or ticker
+    # Risk/Reward
+    stop_px = targets[3][1]
+    risk    = abs(px - stop_px)
+    rr_list = []
+    for i in range(3):
+        reward = abs(targets[i][1] - px)
+        rr = reward / risk if risk > 0 else 0
+        rr_list.append(rr)
 
-    # ── Push Notification ──
-    if enable_notif:
-        notif_body = f"{sig['en']} | Score: {score}/100 | Price: {sym}{px:.2f} | RSI: {rsi_v:.1f}"
-        send_browser_notification(f"📊 {ticker} - {sig['en']}", notif_body)
+    company = info.get("longName", ticker) or ticker
 
-    # ── Check RSI alerts ──
-    rsi_alerts = []
-    if rsi_v >= alert_rsi_hi:
-        rsi_alerts.append(f"⚠️ RSI = {rsi_v:.1f} — فوق مستوى ذروة الشراء ({alert_rsi_hi})")
-        if enable_notif:
-            send_browser_notification(f"🔴 {ticker} RSI Alert", f"RSI = {rsi_v:.1f} — ذروة شراء!")
-    if rsi_v <= alert_rsi_lo:
-        rsi_alerts.append(f"💡 RSI = {rsi_v:.1f} — تحت مستوى ذروة البيع ({alert_rsi_lo}) — فرصة محتملة")
-        if enable_notif:
-            send_browser_notification(f"🟢 {ticker} RSI Alert", f"RSI = {rsi_v:.1f} — ذروة بيع — فرصة!")
+    # ═══════════════════════════════════════
+    # LAYOUT: chart col + calculator col
+    # ═══════════════════════════════════════
+    chart_col, calc_col = st.columns([3, 1])
 
-    # ═══════════════════════════════════════════════
-    # SIGNAL BOX
-    # ═══════════════════════════════════════════════
-    st.markdown(f"<div style='color:#4a5568;font-size:14px;margin-bottom:8px'>📍 {company_name} &nbsp;|&nbsp; {market} &nbsp;|&nbsp; {currency}</div>", unsafe_allow_html=True)
+    # ── CALCULATOR (right column) ──────────
+    with calc_col:
+        st.markdown(f"<div style='color:#374151;font-size:12px;margin-bottom:8px'>{company} | {market} | {currency}</div>",
+                    unsafe_allow_html=True)
 
-    sc1,sc2,sc3 = st.columns([1,2,1])
-    with sc2:
-        bar_color = sig["color"]
+        # Signal box
         st.markdown(f"""
-        <div class="{sig['cls']}">
-            <div style="color:{sig['color']};font-size:40px;font-weight:800;line-height:1.1">
-                {sig['icon']} {sig['label']}
-            </div>
-            <div style="color:{sig['color']};font-size:13px;margin-top:8px;opacity:0.8">{sig['en']}</div>
-            <div style="color:{sig['color']};font-size:16px;margin-top:10px;font-weight:600">
-                قوة الإشارة: {score} / 100
-            </div>
-            <div class="prog-bg">
-                <div class="prog-fill" style="width:{score}%;background:{bar_color}"></div>
-            </div>
-            <div style="color:#4a5568;font-size:12px;margin-top:8px">{datetime.now().strftime('%Y-%m-%d  %H:%M')}</div>
+        <div class="sig-box {sig['cls']}" style="margin-bottom:12px">
+            <div style="color:{sig['color']};font-size:30px;font-weight:800">{sig['icon']} {sig['label']}</div>
+            <div style="color:{sig['color']};font-size:11px;margin-top:2px">{sig['en']}</div>
+            <div style="color:{sig['color']};font-size:13px;font-weight:600;margin-top:8px">قوة الإشارة: {score}/100</div>
+            <div class="pb"><div class="pf" style="width:{score}%;background:{sig['color']}"></div></div>
+        </div>""", unsafe_allow_html=True)
+
+        # Market state + Fear/Greed
+        mc1, mc2 = st.columns(2)
+        with mc1:
+            st.markdown(f"""<div class="gauge-box">
+                <div style="color:#374151;font-size:10px">حالة السوق</div>
+                <div style="color:{mkt_color};font-size:12px;font-weight:600;margin-top:3px">{mkt_label}</div>
+            </div>""", unsafe_allow_html=True)
+        with mc2:
+            st.markdown(f"""<div class="gauge-box">
+                <div style="color:#374151;font-size:10px">الخوف والجشع</div>
+                <div style="color:{fg_color};font-size:12px;font-weight:600;margin-top:3px">{fg_label}</div>
+                <div style="color:#374151;font-size:10px">{fg_score:.0f}/100</div>
+            </div>""", unsafe_allow_html=True)
+
+        st.markdown("<div style='height:10px'></div>", unsafe_allow_html=True)
+
+        # ── Calculator ──
+        st.markdown("<div class='calc-box'>", unsafe_allow_html=True)
+        st.markdown("<div class='calc-title'>💰 حاسبة الأرباح</div>", unsafe_allow_html=True)
+
+        shares   = st.number_input("عدد الأسهم", min_value=1, value=100, step=1, key="sh")
+        entry_px = st.number_input(f"سعر الدخول ({sym})", min_value=0.01,
+                                   value=round(px, 2), step=0.01, key="ep",
+                                   format="%.2f")
+        tgt_options = {
+            f"الهدف 1  {sym}{fmt(targets[0][1])}": targets[0][1],
+            f"الهدف 2  {sym}{fmt(targets[1][1])}": targets[1][1],
+            f"الهدف 3  {sym}{fmt(targets[2][1])}": targets[2][1],
+            "سعر مخصص": None,
+        }
+        chosen = st.selectbox("السعر المستهدف", list(tgt_options.keys()), key="tgt")
+        if tgt_options[chosen] is None:
+            exit_px = st.number_input(f"أدخل السعر ({sym})", min_value=0.01,
+                                      value=round(px*1.05,2), step=0.01, key="cust", format="%.2f")
+        else:
+            exit_px = tgt_options[chosen]
+
+        comm_rate = 0.0015
+        cost_in   = shares * entry_px
+        cost_out  = shares * exit_px
+        comm_in   = cost_in  * comm_rate
+        comm_out  = cost_out * comm_rate
+        gross_pnl = cost_out - cost_in
+        net_pnl   = gross_pnl - comm_in - comm_out
+        pct_pnl   = net_pnl / cost_in * 100 if cost_in > 0 else 0
+        is_profit = net_pnl >= 0
+        pnl_color = "#00C851" if is_profit else "#FF4444"
+        pnl_icon  = "📈" if is_profit else "📉"
+
+        usd_rate  = 3.75 if currency == "SAR" else 1.0
+        net_usd   = net_pnl / usd_rate
+
+        st.markdown(f"""
+        <div class="calc-result">
+            <div style="color:#374151;font-size:11px;margin-bottom:6px">النتيجة الصافية</div>
+            <div style="color:{pnl_color};font-size:26px;font-weight:800">{pnl_icon} {sym}{fmt(abs(net_pnl))}</div>
+            <div style="color:{pnl_color};font-size:14px;font-weight:600">{pct_pnl:+.2f}%</div>
+            {'<div style="color:#374151;font-size:11px;margin-top:4px">≈ $' + fmt(abs(net_usd)) + ' USD</div>' if currency=='SAR' else ''}
+        </div>
+        <div style="margin-top:10px">
+            <div class="calc-row"><span style="color:#374151">رأس المال</span><span style="color:#e2e8f0">{sym}{fmt(cost_in)}</span></div>
+            <div class="calc-row"><span style="color:#374151">الربح الخام</span><span style="color:{pnl_color}">{sym}{fmt(gross_pnl):}</span></div>
+            <div class="calc-row"><span style="color:#374151">العمولة (0.15%×2)</span><span style="color:#FF9800">-{sym}{fmt(comm_in+comm_out)}</span></div>
+            <div class="calc-row"><span style="color:#374151">وقف الخسارة</span><span style="color:#FF4444">{sym}{fmt(stop_px)}</span></div>
         </div>
         """, unsafe_allow_html=True)
 
-    # RSI alerts
-    for a in rsi_alerts:
-        st.warning(a)
-
-    # ═══════════════════════════════════════════════
-    # KEY METRICS ROW
-    # ═══════════════════════════════════════════════
-    st.markdown("<div class='sec-title'>📌 المؤشرات الرئيسية</div>", unsafe_allow_html=True)
-    mc = st.columns(8)
-    mets = [
-        ("السعر", f"{sym}{fmt_num_en(px)}", "gold"),
-        ("التغيير %", f"{chg_pct:+.2f}%", "green" if chg_pct>=0 else "red"),
-        ("RSI(14)", fmt_num_en(rsi_v,1), "red" if rsi_v>70 else "green" if rsi_v<30 else "gray"),
-        ("MACD", fmt_num_en(macd_v,4), "green" if macd_v>macd_sv else "red"),
-        ("ADX", fmt_num_en(adx_v,1), "blue" if adx_v>25 else "gray"),
-        ("ATR", fmt_num_en(atr_v,2), "orange"),
-        ("Volume", f"{vol_v/1e6:.1f}M" if vol_v>1e6 else fmt_num_en(vol_v,0), "blue" if vol_v>vol_avg else "gray"),
-        ("MFI(14)", fmt_num_en(mfi_v,1), "red" if mfi_v>80 else "green" if mfi_v<20 else "gray"),
-    ]
-    for i,(lbl,val,clr) in enumerate(mets):
-        with mc[i]:
-            st.markdown(f"""<div class="m-card">
-                <div class="m-label">{lbl}</div>
-                <div class="m-val c-{clr}">{val}</div>
+        # R/R comparison
+        st.markdown("<div style='margin-top:12px;'>", unsafe_allow_html=True)
+        for i, (rr, tgt) in enumerate(zip(rr_list, targets[:3])):
+            rr_ok = rr >= 2.0
+            rr_clr = "#00C851" if rr >= 2 else "#FF9800" if rr >= 1 else "#FF4444"
+            st.markdown(f"""
+            <div style="display:flex;justify-content:space-between;align-items:center;
+                 padding:5px 8px;background:#060c14;border-radius:6px;margin-bottom:3px;font-size:12px">
+                <span style="color:#374151">{tgt[0]}</span>
+                <span style="color:{tgt[2]}">{sym}{fmt(tgt[1])}</span>
+                <span style="color:{rr_clr}">R/R {rr:.1f}x {"✅" if rr_ok else "⚠️"}</span>
             </div>""", unsafe_allow_html=True)
+        st.markdown("</div>", unsafe_allow_html=True)
 
-    mc2 = st.columns(8)
-    mets2 = [
-        ("EMA 9",   fmt_num_en(ema9_v),   "green" if px>ema9_v  else "red"),
-        ("EMA 20",  fmt_num_en(ema20_v),  "green" if px>ema20_v else "red"),
-        ("EMA 50",  fmt_num_en(ema50_v),  "green" if px>ema50_v else "red"),
-        ("SMA 200", fmt_num_en(sma200_v), "green" if px>sma200_v else "red"),
-        ("BB Upper",fmt_num_en(bbu_v),    "red"),
-        ("BB Lower",fmt_num_en(bbl_v),    "green"),
-        ("VWAP",    fmt_num_en(vwap_v),   "green" if px>vwap_v else "red"),
-        ("SAR",     fmt_num_en(sar_v),    "green" if sar_tr==1 else "red"),
-    ]
-    for i,(lbl,val,clr) in enumerate(mets2):
-        with mc2[i]:
-            st.markdown(f"""<div class="m-card">
-                <div class="m-label">{lbl}</div>
-                <div class="m-val c-{clr}">{val}</div>
+        # Indicator breakdown
+        st.markdown("<div style='margin-top:12px;'>", unsafe_allow_html=True)
+        st.markdown("<div style='color:#374151;font-size:11px;margin-bottom:4px'>تفصيل المؤشرات</div>", unsafe_allow_html=True)
+        for k, v in ind_breakdown.items():
+            clr = "#00C851" if "🟢" in v else "#FF4444" if "❌" in v or "🔴" in v else "#9ca3af"
+            st.markdown(f"""<div class="ind-row">
+                <span style="color:#374151">{k}</span>
+                <span style="color:{clr}">{v}</span>
             </div>""", unsafe_allow_html=True)
+        st.markdown("</div></div>", unsafe_allow_html=True)
 
-    # ═══════════════════════════════════════════════
-    # TARGETS + FIBONACCI + PIVOT POINTS
-    # ═══════════════════════════════════════════════
-    t_col, f_col, p_col = st.columns([2,1.5,1.5])
-
-    with t_col:
-        st.markdown("<div class='sec-title'>🎯 الأهداف السعرية (ATR-Based)</div>", unsafe_allow_html=True)
-        tc = st.columns(4)
-        for i,(name,tpx,clr) in enumerate(targets):
-            pct=(tpx-px)/px*100
-            with tc[i]:
-                st.markdown(f"""<div class="t-card">
-                    <div style="color:#4a5568;font-size:11px;margin-bottom:4px">{name}</div>
-                    <div style="color:{clr};font-size:18px;font-weight:700">{sym}{fmt_num_en(tpx)}</div>
-                    <div style="color:{clr};font-size:12px">({pct:+.1f}%)</div>
+    # ── CHART (left column) ────────────────
+    with chart_col:
+        # Key metrics row
+        mco = st.columns(6)
+        mets = [
+            ("السعر",   f"{sym}{fmt(px)}",        "cy"),
+            ("التغيير", f"{chg_pct:+.2f}%",       "cg" if chg_pct>=0 else "cr"),
+            ("RSI",     fmt(rsi_v,1),              "cr" if rsi_v>70 else "cg" if rsi_v<30 else "cw"),
+            ("ADX",     fmt(adx_v,1),              "cb" if adx_v>25 else "cw"),
+            ("ATR",     fmt(atr_v,2),              "cw"),
+            ("Volume",  f"{vol_v/1e6:.1f}M" if vol_v>1e5 else fmt(vol_v,0),
+                        "cg" if vol_v>vol_avg else "cw"),
+        ]
+        for i,(lbl,val,cls) in enumerate(mets):
+            with mco[i]:
+                st.markdown(f"""<div class="card">
+                    <div class="card-lbl">{lbl}</div>
+                    <div class="card-val {cls}">{val}</div>
                 </div>""", unsafe_allow_html=True)
 
-    with f_col:
-        st.markdown("<div class='sec-title'>📐 مستويات فيبوناتشي</div>", unsafe_allow_html=True)
-        for lbl,val in list(fibs.items())[:5]:
-            clr = "#00C851" if val<px else "#FF4444"
-            diff_pct = (val-px)/px*100
-            st.markdown(f"""<div style="display:flex;justify-content:space-between;
-                padding:6px 10px;background:#0d1320;border-radius:6px;margin-bottom:4px;font-size:13px">
-                <span style="color:#6b7280">{lbl}</span>
-                <span style="color:{clr}">{sym}{fmt_num_en(val)} ({diff_pct:+.1f}%)</span>
-            </div>""", unsafe_allow_html=True)
+        # ── CHART ──
+        fig = make_subplots(
+            rows=5, cols=1,
+            shared_xaxes=True,
+            vertical_spacing=0.018,
+            row_heights=[0.46, 0.155, 0.135, 0.135, 0.115],
+            subplot_titles=("", "RSI (14)", "MACD", "Stochastic (14,3)", "ADX")
+        )
 
-    with p_col:
-        st.markdown("<div class='sec-title'>📍 نقاط المحور (Pivot)</div>", unsafe_allow_html=True)
-        piv_display = [("R2","#FF4444"),("R1","#FF8800"),("P","#FFD700"),("S1","#00C851"),("S2","#007030")]
-        for k,clr in piv_display:
-            v = float(piv[k].iloc[-1]) if hasattr(piv[k],'iloc') else float(piv[k])
-            diff_pct = (v-px)/px*100
-            st.markdown(f"""<div style="display:flex;justify-content:space-between;
-                padding:6px 10px;background:#0d1320;border-radius:6px;margin-bottom:4px;font-size:13px">
-                <span style="color:{clr};font-weight:600">{k}</span>
-                <span style="color:{clr}">{sym}{fmt_num_en(v)} ({diff_pct:+.1f}%)</span>
-            </div>""", unsafe_allow_html=True)
+        # ── Candlestick ONLY (no indicators on candles) ──
+        fig.add_trace(go.Candlestick(
+            x=data.index, open=O, high=H, low=L, close=C,
+            name="السعر",
+            increasing=dict(fillcolor="#00C851", line=dict(color="#00C851", width=0.8)),
+            decreasing=dict(fillcolor="#FF4444", line=dict(color="#FF4444", width=0.8))
+        ), row=1, col=1)
 
-    # ═══════════════════════════════════════════════
-    # MAIN CHART
-    # ═══════════════════════════════════════════════
-    st.markdown("<div class='sec-title'>📈 الرسم البياني المتكامل</div>", unsafe_allow_html=True)
+        # ── Target lines ONLY on the candle chart ──
+        tgt_styles = [
+            dict(color="#00C851", dash="dash",  width=1.8),
+            dict(color="#00A040", dash="dash",  width=1.5),
+            dict(color="#007030", dash="dash",  width=1.5),
+            dict(color="#FF4444", dash="dot",   width=2.0),
+        ]
+        for (name, tpx, clr), style in zip(targets, tgt_styles):
+            pct = (tpx - px) / px * 100
+            fig.add_hline(
+                y=tpx, row=1, col=1,
+                line=dict(color=style["color"], width=style["width"], dash=style["dash"]),
+                annotation_text=f" {name}: {sym}{fmt(tpx)} ({pct:+.1f}%)",
+                annotation_position="right",
+                annotation_font=dict(size=11, color=style["color"]),
+            )
 
-    fig = make_subplots(
-        rows=5, cols=1, shared_xaxes=True,
-        vertical_spacing=0.025,
-        row_heights=[0.44,0.16,0.14,0.13,0.13],
-        subplot_titles=("", "MACD", "RSI (14)", "Stochastic (14,3,3)", "CCI / Williams %R")
-    )
+        # ── RSI sub-chart ──
+        fig.add_trace(go.Scatter(x=data.index, y=rsi_s, name="RSI",
+                                  line=dict(color="#E91E63", width=1.8)), row=2, col=1)
+        fig.add_hrect(y0=70, y1=100, fillcolor="rgba(255,68,68,0.05)", line_width=0, row=2, col=1)
+        fig.add_hrect(y0=0,  y1=30,  fillcolor="rgba(0,200,81,0.05)",  line_width=0, row=2, col=1)
+        for y, c in [(70,"#FF4444"),(50,"#333"),(30,"#00C851")]:
+            fig.add_hline(y=y, line=dict(color=c, width=0.8, dash="dot"), row=2, col=1)
 
-    # Candles
-    fig.add_trace(go.Candlestick(x=data.index,open=O,high=H,low=L,close=C,name="Price",
-        increasing=dict(fillcolor="#00C851",line=dict(color="#00C851",width=0.8)),
-        decreasing=dict(fillcolor="#FF4444",line=dict(color="#FF4444",width=0.8))),row=1,col=1)
+        # ── MACD sub-chart ──
+        hcols = ["#00C851" if v >= 0 else "#FF4444" for v in macd_h.fillna(0)]
+        fig.add_trace(go.Bar(x=data.index, y=macd_h, name="Hist",
+                              marker_color=hcols, opacity=0.7), row=3, col=1)
+        fig.add_trace(go.Scatter(x=data.index, y=macd_l, name="MACD",
+                                  line=dict(color="#FF9800", width=1.5)), row=3, col=1)
+        fig.add_trace(go.Scatter(x=data.index, y=macd_s, name="Signal",
+                                  line=dict(color="#2196F3", width=1.5)), row=3, col=1)
+        fig.add_hline(y=0, line=dict(color="#222", width=0.8), row=3, col=1)
 
-    # EMAs
-    if show_ema:
-        fig.add_trace(go.Scatter(x=data.index,y=ema9_s, name="EMA 9",  line=dict(color="#FF9800",width=1.2)),row=1,col=1)
-        fig.add_trace(go.Scatter(x=data.index,y=ema20_s,name="EMA 20", line=dict(color="#2196F3",width=1.5)),row=1,col=1)
-        fig.add_trace(go.Scatter(x=data.index,y=ema50_s,name="EMA 50", line=dict(color="#9C27B0",width=1.8)),row=1,col=1)
-    fig.add_trace(go.Scatter(x=data.index,y=sma200_s,name="SMA 200",line=dict(color="#F44336",width=2.2,dash="dot")),row=1,col=1)
+        # ── Stochastic sub-chart ──
+        fig.add_trace(go.Scatter(x=data.index, y=stk_s, name="%K",
+                                  line=dict(color="#00BCD4", width=1.5)), row=4, col=1)
+        fig.add_trace(go.Scatter(x=data.index, y=std_s, name="%D",
+                                  line=dict(color="#FF5722", width=1.5)), row=4, col=1)
+        fig.add_hrect(y0=80, y1=100, fillcolor="rgba(255,68,68,0.05)", line_width=0, row=4, col=1)
+        fig.add_hrect(y0=0,  y1=20,  fillcolor="rgba(0,200,81,0.05)",  line_width=0, row=4, col=1)
+        for y, c in [(80,"#FF4444"),(20,"#00C851")]:
+            fig.add_hline(y=y, line=dict(color=c, width=0.8, dash="dot"), row=4, col=1)
 
-    # Bollinger
-    if show_bb:
-        fig.add_trace(go.Scatter(x=data.index,y=bb_u,name="BB Upper",line=dict(color="#607D8B",width=1,dash="dash")),row=1,col=1)
-        fig.add_trace(go.Scatter(x=data.index,y=bb_l,name="BB Lower",line=dict(color="#607D8B",width=1,dash="dash"),
-                                  fill="tonexty",fillcolor="rgba(96,125,139,0.06)"),row=1,col=1)
+        # ── ADX sub-chart ──
+        fig.add_trace(go.Scatter(x=data.index, y=adx_s, name="ADX",
+                                  line=dict(color="#FFD700", width=1.8)), row=5, col=1)
+        fig.add_trace(go.Scatter(x=data.index, y=dip_s, name="DI+",
+                                  line=dict(color="#00C851", width=1.2, dash="dot")), row=5, col=1)
+        fig.add_trace(go.Scatter(x=data.index, y=dim_s, name="DI-",
+                                  line=dict(color="#FF4444", width=1.2, dash="dot")), row=5, col=1)
+        fig.add_hline(y=25, line=dict(color="#333", width=0.8, dash="dot"), row=5, col=1)
 
-    # Keltner
-    if show_kc:
-        fig.add_trace(go.Scatter(x=data.index,y=kc_u,name="KC Upper",line=dict(color="#795548",width=1,dash="dot")),row=1,col=1)
-        fig.add_trace(go.Scatter(x=data.index,y=kc_l,name="KC Lower",line=dict(color="#795548",width=1,dash="dot")),row=1,col=1)
+        fig.update_layout(
+            template="plotly_dark",
+            height=820,
+            showlegend=False,
+            xaxis_rangeslider_visible=False,
+            plot_bgcolor="#080d15",
+            paper_bgcolor="#080d15",
+            font=dict(family="Tajawal, sans-serif", color="#6b7280", size=11),
+            margin=dict(l=4, r=120, t=16, b=4),
+        )
+        for ann in fig.layout.annotations:
+            ann.font.size = 10; ann.font.color = "#6b7280"
 
-    # VWAP
-    if show_vwap:
-        fig.add_trace(go.Scatter(x=data.index,y=vwap_s,name="VWAP",line=dict(color="#00BCD4",width=1.8,dash="dashdot")),row=1,col=1)
+        st.plotly_chart(fig, use_container_width=True)
 
-    # Parabolic SAR
-    if show_sar:
-        sar_clr = ["#00C851" if t==1 else "#FF4444" for t in trend_s]
-        fig.add_trace(go.Scatter(x=data.index,y=sar_s,name="SAR",mode="markers",
-                                  marker=dict(symbol="circle",size=3,color=sar_clr)),row=1,col=1)
+        # ── Targets row ──
+        st.markdown("<div class='sec'>🎯 الأهداف السعرية</div>", unsafe_allow_html=True)
+        tc = st.columns(4)
+        for i, (name, tpx, clr) in enumerate(targets):
+            pct = (tpx - px) / px * 100
+            with tc[i]:
+                st.markdown(f"""<div class="tgt-card">
+                    <div style="color:#374151;font-size:11px;margin-bottom:3px">{name}</div>
+                    <div style="color:{clr};font-size:20px;font-weight:700">{sym}{fmt(tpx)}</div>
+                    <div style="color:{clr};font-size:12px">{pct:+.1f}%</div>
+                    <div style="color:#374151;font-size:10px;margin-top:2px">R/R {rr_list[i] if i<3 else 0:.1f}x</div>
+                </div>""", unsafe_allow_html=True)
 
-    # MACD
-    h_col = ["#00C851" if v>=0 else "#FF4444" for v in hist_line]
-    fig.add_trace(go.Bar(x=data.index,y=hist_line,name="Histogram",marker_color=h_col,opacity=0.7),row=2,col=1)
-    fig.add_trace(go.Scatter(x=data.index,y=macd_line,name="MACD",line=dict(color="#FF9800",width=1.5)),row=2,col=1)
-    fig.add_trace(go.Scatter(x=data.index,y=sig_line, name="Signal",line=dict(color="#2196F3",width=1.5)),row=2,col=1)
-    fig.add_hline(y=0,line=dict(color="#333",width=0.8),row=2,col=1)
-
-    # RSI
-    fig.add_trace(go.Scatter(x=data.index,y=rsi_s,name="RSI",line=dict(color="#E91E63",width=1.8)),row=3,col=1)
-    fig.add_hrect(y0=70,y1=100,fillcolor="rgba(255,68,68,0.06)",line_width=0,row=3,col=1)
-    fig.add_hrect(y0=0, y1=30, fillcolor="rgba(0,200,81,0.06)", line_width=0,row=3,col=1)
-    for y,clr in [(70,"#FF4444"),(50,"#444"),(30,"#00C851")]:
-        fig.add_hline(y=y,line=dict(color=clr,width=0.8,dash="dot"),row=3,col=1)
-
-    # Stochastic
-    fig.add_trace(go.Scatter(x=data.index,y=stk_s,name="%K",line=dict(color="#00BCD4",width=1.5)),row=4,col=1)
-    fig.add_trace(go.Scatter(x=data.index,y=std_s,name="%D",line=dict(color="#FF5722",width=1.5)),row=4,col=1)
-    fig.add_hrect(y0=80,y1=100,fillcolor="rgba(255,68,68,0.06)",line_width=0,row=4,col=1)
-    fig.add_hrect(y0=0, y1=20, fillcolor="rgba(0,200,81,0.06)", line_width=0,row=4,col=1)
-    for y,clr in [(80,"#FF4444"),(20,"#00C851")]:
-        fig.add_hline(y=y,line=dict(color=clr,width=0.8,dash="dot"),row=4,col=1)
-
-    # CCI
-    cci_clr = ["#FF4444" if v>100 else "#00C851" if v<-100 else "#607D8B" for v in cci_s.fillna(0)]
-    fig.add_trace(go.Bar(x=data.index,y=cci_s,name="CCI",marker_color=cci_clr,opacity=0.7),row=5,col=1)
-    for y,clr in [(100,"#FF4444"),(-100,"#00C851")]:
-        fig.add_hline(y=y,line=dict(color=clr,width=0.8,dash="dot"),row=5,col=1)
-
-    fig.update_layout(
-        template="plotly_dark", height=900,
-        showlegend=True,
-        legend=dict(orientation="h",x=0,y=1.01,font=dict(size=10),bgcolor="rgba(0,0,0,0)"),
-        xaxis_rangeslider_visible=False,
-        plot_bgcolor="#060b16", paper_bgcolor="#060b16",
-        font=dict(family="Tajawal,sans-serif",color="#9ca3af",size=11),
-        margin=dict(l=6,r=6,t=28,b=6),
-    )
-    for ann in fig.layout.annotations:
-        ann.font.size=11; ann.font.color="#6b7280"
-
-    st.plotly_chart(fig, use_container_width=True)
-
-    # ═══════════════════════════════════════════════
-    # VOLUME ANALYSIS
-    # ═══════════════════════════════════════════════
-    st.markdown("<div class='sec-title'>📊 تحليل حجم التداول</div>", unsafe_allow_html=True)
-    vc1,vc2,vc3,vc4 = st.columns(4)
-
-    vol_ratio = vol_v/(vol_avg+1e-10)
-    vol_signal = "تأكيد قوي 🔥" if vol_ratio>2 else "أعلى المتوسط ✅" if vol_ratio>1 else "أقل المتوسط ⚠️"
-    vol_clr    = "#FF9800" if vol_ratio>2 else "#00C851" if vol_ratio>1 else "#FF4444"
-
-    obv_trend = "صاعد ✅" if obv_s.iloc[-1]>obv_s.iloc[-5] else "هابط ❌"
-    cmf_interp= "تدفق شراء ✅" if cmf_v>0.1 else "تدفق بيع ❌" if cmf_v<-0.1 else "محايد"
-
-    with vc1:
-        st.markdown(f"""<div class="m-card">
-            <div class="m-label">حجم اليوم</div>
-            <div class="m-val" style="color:{vol_clr}">{vol_v/1e6:.2f}M</div>
-            <div style="color:{vol_clr};font-size:11px">{vol_signal}</div>
-        </div>""", unsafe_allow_html=True)
-    with vc2:
-        st.markdown(f"""<div class="m-card">
-            <div class="m-label">نسبة الحجم</div>
-            <div class="m-val" style="color:{vol_clr}">{vol_ratio:.2f}x</div>
-            <div style="color:#4a5568;font-size:11px">متوسط: {vol_avg/1e6:.2f}M</div>
-        </div>""", unsafe_allow_html=True)
-    with vc3:
-        st.markdown(f"""<div class="m-card">
-            <div class="m-label">OBV اتجاه</div>
-            <div class="m-val c-{'green' if 'صاعد' in obv_trend else 'red'}">{obv_trend}</div>
-            <div style="color:#4a5568;font-size:11px">{obv_s.iloc[-1]/1e6:.1f}M</div>
-        </div>""", unsafe_allow_html=True)
-    with vc4:
-        st.markdown(f"""<div class="m-card">
-            <div class="m-label">CMF (20)</div>
-            <div class="m-val" style="color:{'#00C851' if cmf_v>0 else '#FF4444'}">{cmf_v:.3f}</div>
-            <div style="color:#4a5568;font-size:11px">{cmf_interp}</div>
-        </div>""", unsafe_allow_html=True)
-
-    # Volume bar chart + OBV
-    vfig = make_subplots(rows=1,cols=2,subplot_titles=("حجم التداول","OBV"))
-    vcolors = ["#00C851" if C.iloc[i]>=O.iloc[i] else "#FF4444" for i in range(len(C))]
-    vfig.add_trace(go.Bar(x=data.index,y=V,marker_color=vcolors,name="Volume",opacity=0.8),row=1,col=1)
-    vfig.add_trace(go.Scatter(x=data.index,y=vol_ma20,name="Vol MA20",line=dict(color="#FFD700",width=1.5)),row=1,col=1)
-    vfig.add_trace(go.Scatter(x=data.index,y=obv_s,name="OBV",line=dict(color="#00BCD4",width=1.5),fill="tozeroy",fillcolor="rgba(0,188,212,0.08)"),row=1,col=2)
-    vfig.update_layout(template="plotly_dark",height=200,showlegend=False,
-                       plot_bgcolor="#060b16",paper_bgcolor="#060b16",
-                       margin=dict(l=6,r=6,t=28,b=6),font=dict(family="Tajawal",size=10,color="#6b7280"))
-    for ann in vfig.layout.annotations: ann.font.size=10; ann.font.color="#6b7280"
-    st.plotly_chart(vfig, use_container_width=True)
-
-    # ═══════════════════════════════════════════════
-    # FULL INDICATORS TABLE
-    # ═══════════════════════════════════════════════
-    st.markdown("<div class='sec-title'>📋 جدول التحليل الفني الشامل</div>", unsafe_allow_html=True)
-
-    def ind_row(name, val_str, interp_str, icon, color):
-        st.markdown(f"""
-        <div class="t-row">
-            <span style="color:#d1d5db;font-weight:500">{name}</span>
-            <span style="color:#FFD700;font-family:monospace">{val_str}</span>
-            <span style="color:{color}">{interp_str}</span>
-            <span style="font-size:16px">{icon}</span>
-        </div>""", unsafe_allow_html=True)
-
-    st.markdown("""<div class="t-row" style="background:#0a1020;border-radius:8px 8px 0 0">
-        <span style="color:#4a5568;font-size:11px">المؤشر</span>
-        <span style="color:#4a5568;font-size:11px">القيمة</span>
-        <span style="color:#4a5568;font-size:11px">التفسير</span>
-        <span></span>
-    </div>""", unsafe_allow_html=True)
-
-    rows_data = [
-        ("RSI (14)", fmt_num_en(rsi_v,1),
-         "ذروة شراء — احتمال تصحيح" if rsi_v>70 else "ذروة بيع — فرصة شراء" if rsi_v<30 else "قوي صعودي" if rsi_v>55 else "ضعيف هبوطي" if rsi_v<45 else "محايد",
-         "🔴" if rsi_v>70 else "🟢" if rsi_v<30 else "🟢" if rsi_v>55 else "🔴" if rsi_v<45 else "⚪"),
-        ("MACD vs Signal", f"{fmt_num_en(macd_v,4)} / {fmt_num_en(macd_sv,4)}",
-         "تقاطع صعودي — إشارة شراء قوية" if macd_v>macd_sv else "تقاطع هبوطي — إشارة بيع",
-         "🟢" if macd_v>macd_sv else "🔴"),
-        ("ADX (14)", fmt_num_en(adx_v,1),
-         f"اتجاه {'قوي' if adx_v>25 else 'ضعيف'} — DI+ {'>' if dip_v>dim_v else '<'} DI- ({'صعودي' if dip_v>dim_v else 'هبوطي'})",
-         "🟢" if (adx_v>25 and dip_v>dim_v) else "🔴" if (adx_v>25 and dim_v>dip_v) else "⚪"),
-        ("Stochastic %K", fmt_num_en(stk_v,1),
-         "ذروة شراء" if stk_v>80 else "ذروة بيع — فرصة" if stk_v<20 else "منطقة محايدة",
-         "🔴" if stk_v>80 else "🟢" if stk_v<20 else "⚪"),
-        ("CCI (20)", fmt_num_en(cci_v,1),
-         "ذروة شراء > +100" if cci_v>100 else "ذروة بيع < -100 — فرصة" if cci_v<-100 else "داخل النطاق الطبيعي",
-         "🔴" if cci_v>100 else "🟢" if cci_v<-100 else "⚪"),
-        ("Williams %R", fmt_num_en(wr_v,1),
-         "ذروة بيع (< -80) — فرصة محتملة" if wr_v<-80 else "ذروة شراء (> -20)" if wr_v>-20 else "منطقة محايدة",
-         "🟢" if wr_v<-80 else "🔴" if wr_v>-20 else "⚪"),
-        ("MFI (14)", fmt_num_en(mfi_v,1),
-         "ذروة شراء بالحجم" if mfi_v>80 else "ذروة بيع — ضغط مرتفع" if mfi_v<20 else "تدفق أموال طبيعي",
-         "🔴" if mfi_v>80 else "🟢" if mfi_v<20 else "⚪"),
-        ("Ultimate Osc.", fmt_num_en(uo_v,1),
-         "ذروة شراء" if uo_v>70 else "ذروة بيع — فرصة" if uo_v<30 else "محايد",
-         "🔴" if uo_v>70 else "🟢" if uo_v<30 else "⚪"),
-        ("Parabolic SAR", fmt_num_en(sar_v,2),
-         "السعر فوق SAR — اتجاه صاعد ✅" if sar_tr==1 else "السعر تحت SAR — اتجاه هابط ❌",
-         "🟢" if sar_tr==1 else "🔴"),
-        ("Aroon Up/Down", f"{fmt_num_en(aroon_u,0)} / {fmt_num_en(aroon_d,0)}",
-         "Aroon Up مرتفع — زخم صعودي" if aroon_u>70 else "Aroon Down مرتفع — زخم هبوطي" if aroon_d>70 else "محايد",
-         "🟢" if aroon_u>aroon_d else "🔴"),
-        ("Bollinger %B", f"{fmt_num_en((px-bbl_v)/(bbu_v-bbl_v+1e-10)*100,0)}%",
-         "خروج فوق النطاق العلوي" if px>bbu_v else "خروج تحت النطاق السفلي — فرصة" if px<bbl_v else "داخل النطاق",
-         "🔴" if px>bbu_v else "🟢" if px<bbl_v else "⚪"),
-        ("CMF (20)", fmt_num_en(cmf_v,3),
-         "تدفق شراء قوي ✅" if cmf_v>0.1 else "تدفق بيع ❌" if cmf_v<-0.1 else "محايد",
-         "🟢" if cmf_v>0.1 else "🔴" if cmf_v<-0.1 else "⚪"),
-        ("SMA 50 vs 200", f"{fmt_num_en(ema50_v,2)} / {fmt_num_en(sma200_v,2)}",
-         "Golden Cross ✅ — اتجاه صاعد قوي" if ema50_v>sma200_v else "Death Cross ❌ — اتجاه هابط",
-         "🟢" if ema50_v>sma200_v else "🔴"),
-        ("VWAP", fmt_num_en(vwap_v,2),
-         f"السعر {'فوق' if px>vwap_v else 'تحت'} VWAP — {'قوة شراء' if px>vwap_v else 'ضغط بيع'}",
-         "🟢" if px>vwap_v else "🔴"),
-        ("POC (Volume)", f"{sym}{fmt_num_en(poc,2)}",
-         f"أعلى تركيز حجم — {'دعم' if poc<px else 'مقاومة'}",
-         "🟢" if poc<px else "🔴"),
-        ("حجم التداول", f"{vol_v/1e6:.2f}M",
-         f"{'أعلى المتوسط بـ' if vol_ratio>1 else 'أقل المتوسط بـ'} {abs(vol_ratio-1)*100:.0f}%",
-         "🟢" if vol_ratio>1.2 else "🔴" if vol_ratio<0.5 else "⚪"),
-    ]
-
-    color_map = {"🟢":"#00C851","🔴":"#FF4444","🟡":"#FFD700","⚪":"#6b7280"}
-    for name,val,interp_str,icon in rows_data:
-        ind_row(name, val, interp_str, icon, color_map.get(icon,"#9ca3af"))
-
-    # ═══════════════════════════════════════════════
-    # SIGNAL LEGEND + NOTIFICATIONS GUIDE
-    # ═══════════════════════════════════════════════
-    st.markdown("<div class='sec-title'>🗺️ دليل الإشارات والتنبيهات</div>", unsafe_allow_html=True)
-    lc = st.columns(4)
-    leg = [
-        ("دخول الآن ▲",    "#001a00","#00C851","≥ 65 نقطة — كل المؤشرات صاعدة","BUY NOW"),
-        ("استعداد دخول ◆", "#0a2010","#7FD68A","45–64 — بداية إشارات صعودية","READY TO BUY"),
-        ("استعداد خروج ◆", "#200808","#FF7070","28–44 — بداية إشارات هبوطية","READY TO SELL"),
-        ("خروج الآن ▼",    "#180000","#CC0000","< 28 — إشارات هبوط قوية","SELL NOW"),
-    ]
-    for i,(lbl,bg,clr,desc,en) in enumerate(leg):
-        with lc[i]:
-            st.markdown(f"""<div style="background:{bg};border:2px solid {clr};border-radius:12px;
-                padding:14px;text-align:center">
-                <div style="color:{clr};font-size:16px;font-weight:700">{lbl}</div>
-                <div style="color:#6b7280;font-size:10px;margin-top:2px">{en}</div>
-                <div style="color:{clr};font-size:11px;margin-top:8px;opacity:0.8">{desc}</div>
-            </div>""", unsafe_allow_html=True)
-
-    # Notifications panel
-    st.markdown("<div class='sec-title'>🔔 التنبيهات النشطة</div>", unsafe_allow_html=True)
-    notif_items = [
-        (f"📊 تحليل {ticker} — {sig['label']} | نقاط: {score}/100 | السعر: {sym}{fmt_num_en(px)}", sig["color"]),
-        (f"📐 RSI = {fmt_num_en(rsi_v,1)} | {'⚠️ ذروة شراء' if rsi_v>70 else '💡 ذروة بيع' if rsi_v<30 else '✅ مستوى طبيعي'}", "#FFD700"),
-        (f"📈 MACD {'صاعد ✅' if macd_v>macd_sv else 'هابط ❌'} | ADX = {fmt_num_en(adx_v,1)} ({'قوي' if adx_v>25 else 'ضعيف'})", "#60A5FA"),
-        (f"💹 الحجم = {vol_ratio:.2f}x المتوسط | OBV {'صاعد ✅' if obv_trend.startswith('صاعد') else 'هابط ❌'} | CMF = {fmt_num_en(cmf_v,3)}", "#9CA3AF"),
-        (f"🎯 هدف 1: {sym}{fmt_num_en(targets[0][1])} ({(targets[0][1]-px)/px*100:+.1f}%) | هدف 2: {sym}{fmt_num_en(targets[1][1])} | وقف: {sym}{fmt_num_en(targets[3][1])}", "#00C851" if sig["type"] in ("buy","watch_buy") else "#FF4444"),
-    ]
-    for txt,clr in notif_items:
-        st.markdown(f"""<div class="alert-item" style="border-left-color:{clr}">
-            <span style="color:{clr}">{txt}</span>
-        </div>""", unsafe_allow_html=True)
-
-    st.markdown("""<div style="background:#0d1320;border:1px solid #1e2d45;border-radius:10px;padding:14px 18px;margin-top:10px">
-        <div style="color:#FFD700;font-size:14px;font-weight:600;margin-bottom:8px">📱 تفعيل التنبيهات على الجوال والكمبيوتر</div>
-        <div style="color:#6b7280;font-size:13px;line-height:1.8">
-        ✅ اضغط <b style="color:#e2e8f0">السماح</b> عند ظهور طلب التنبيهات في المتصفح<br>
-        ✅ يعمل على <b style="color:#e2e8f0">Chrome / Safari / Edge</b> على الجوال والكمبيوتر<br>
-        ✅ على الآيفون: افتح الموقع في Safari ← اضغط Share ← <b style="color:#e2e8f0">Add to Home Screen</b> لتنبيهات أفضل<br>
-        ✅ يمكن إعداد تنبيهات RSI مخصصة من الشريط الجانبي
-        </div>
-    </div>""", unsafe_allow_html=True)
-
-    # Download
-    st.markdown("<br>", unsafe_allow_html=True)
-    st.download_button(
-        "📥 تحميل بيانات التحليل (CSV)",
-        data.to_csv().encode("utf-8"),
-        file_name=f"{ticker}_analysis_{datetime.now().strftime('%Y%m%d')}.csv",
-        mime="text/csv", use_container_width=True
-    )
-
-else:
-    # ─── Landing / empty state ──
+# ── Landing ──
+elif not analyze:
     st.markdown("""
-    <div style="text-align:center;padding:60px 20px">
-        <div style="font-size:72px;margin-bottom:20px">📊</div>
-        <div style="color:#d1d5db;font-size:24px;font-weight:600;margin-bottom:12px">ابحث عن أي سهم للبدء</div>
-        <div style="color:#4a5568;font-size:15px;line-height:2">
-            السوق الأمريكي: AAPL • MSFT • TSLA • NVDA • AMZN<br>
-            السوق السعودي: 2222.SR (أرامكو) • 1120.SR (الراجحي) • 2010.SR (سابك)<br><br>
-            <span style="color:#FFD700">15+ مؤشر فني عالمي</span> &nbsp;•&nbsp; 
-            <span style="color:#00C851">أهداف سعرية ذكية</span> &nbsp;•&nbsp; 
-            <span style="color:#60A5FA">تنبيهات فورية</span>
+    <div style="text-align:center;padding:80px 20px">
+        <div style="font-size:64px;margin-bottom:20px">📊</div>
+        <div style="color:#e2e8f0;font-size:22px;font-weight:700;margin-bottom:10px">ابحث عن أي سهم للبدء</div>
+        <div style="color:#374151;font-size:14px;line-height:2.2">
+            السوق السعودي: 2222.SR &nbsp;•&nbsp; 1120.SR &nbsp;•&nbsp; 2010.SR &nbsp;•&nbsp; 7010.SR<br>
+            السوق الأمريكي: AAPL &nbsp;•&nbsp; TSLA &nbsp;•&nbsp; MSFT &nbsp;•&nbsp; NVDA &nbsp;•&nbsp; AMZN
         </div>
     </div>
     """, unsafe_allow_html=True)
 
 st.markdown("""
-<hr>
-<p style="text-align:center;color:#1f2937;font-size:11px;padding:8px">
-📊 منصة التحليل الفني المتقدم &nbsp;|&nbsp; للأغراض التعليمية فقط &nbsp;|&nbsp; ليست توصية استثمارية
+<hr style="border:1px solid #0d1422;margin-top:30px">
+<p style="text-align:center;color:#1f2937;font-size:11px">
+للأغراض التعليمية فقط • ليست توصية استثمارية • استشر مختص مالي قبل أي قرار
 </p>""", unsafe_allow_html=True)
