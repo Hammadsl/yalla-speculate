@@ -2,97 +2,109 @@ import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
 
-# 1. إعداد الصفحة والنمط البصري الفاخر (Dark UI)
+# 1. إعدادات الصفحة والستايل العام (ألوان منصة سهم - أخضر فاتح وأبيض)
 st.set_page_config(page_title="YALLA SCALP PRO", layout="wide")
 
 st.markdown("""
     <style>
-    /* خلفية المنصة باللون الداكن العميق */
-    .main { background-color: #0b0e14; color: #e1e1e1; }
-    /* تنسيق الحاويات (المربعات) */
-    .stMetric, .css-1r6slb0, .stButton>button {
-        background-color: #1a1f29 !important;
-        border: 1px solid #2d343f !important;
-        border-radius: 10px !important;
-        color: white !important;
+    .main { background-color: #f8fafb; }
+    * { font-variant-numeric: tabular-nums; font-family: 'Inter', sans-serif !important; }
+    
+    /* تنسيق كروت الأهداف الجانبية (يمين) */
+    .target-card {
+        background-color: #ffffff;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 10px;
+        border-right: 4px solid #00c073;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
     }
-    /* شريط البحث */
-    .stTextInput>div>div>input {
-        background-color: #1a1f29;
-        color: #00ffcc;
-        border: 1px solid #00ffcc;
-        text-align: center;
+    .target-label { color: #666; font-size: 14px; }
+    .target-price { color: #111; font-size: 20px; font-weight: bold; }
+
+    /* تنسيق الحاسبة والقوائم الجانبية */
+    .sidebar-box {
+        background-color: #ffffff;
+        padding: 20px;
+        border-radius: 8px;
+        border: 1px solid #eef0f2;
     }
-    h1 { color: #ffffff; text-shadow: 2px 2px #000000; text-align: center; }
-    .target-box { background: linear-gradient(90deg, #1a1f29, #252b36); padding: 20px; border-radius: 15px; border-left: 5px solid #00ffcc; margin-bottom: 10px; }
+    .block-container { padding-top: 1rem; }
     </style>
     """, unsafe_allow_html=True)
 
-# 2. رأس المنصة
-st.markdown("<h1>💎 YALLA SCALP PRO</h1>", unsafe_allow_html=True)
+# دالة التنبيه الصوتي
+def play_sound(url):
+    st.markdown(f'<audio autoplay><source src="{url}" type="audio/mp3"></audio>', unsafe_allow_html=True)
 
-# 3. محرك البحث الذكي (يميناً في الأعلى)
-col_search_1, col_search_2, col_search_3 = st.columns([1, 2, 1])
-with col_search_2:
-    ticker = st.text_input("🔍 ابحث عن الشركة (بالعربي أو الرمز الإنجليزي):", placeholder="مثال: الراجحي أو 1120")
+# 2. منطق تحديد العملة
+def get_currency(ticker):
+    if any(char.isdigit() for char in ticker): return "SAR"
+    return "$"
 
-# محاكاة لبيانات الأسهم (هنا يتم ربط البحث بالنتائج)
+# 3. الهيكل الرأسي
+col_logo, col_search = st.columns([1, 4])
+with col_logo:
+    st.markdown("<h3 style='color:#00c073;'>YALLA SCALP</h3>", unsafe_allow_html=True)
+with col_search:
+    ticker = st.text_input("", placeholder="ادخل اسم الشركة او الرمز...", label_visibility="collapsed")
+
 if ticker:
-    # تخصيص الصفحة للسهم المبحوث عنه فقط
-    st.markdown(f"<h2 style='text-align:center; color:#00ffcc;'>تحليل سهم: {ticker}</h2>", unsafe_allow_html=True)
-    
-    # تقسيم الواجهة: يسار (بيانات وأهداف) - يمين (حاسبة وأخبار)
-    col_left, col_mid, col_right = st.columns([1.5, 3, 1.5])
+    curr = get_currency(ticker)
+    current_price = 75.30 # سعر افتراضي للمحاكاة
+    target_1, target_2, target_3 = 80.00, 85.50, 90.15
+    stop_loss = 68.00
 
-    # --- العمود الأيمن: حاسبة الأرباح والأخبار ---
-    with col_right:
-        st.markdown("### 🧮 حاسبة الأرباح")
-        price_in = st.number_input("سعر الشراء", value=70.00)
-        amount = st.number_input("عدد الأسهم", value=1000)
-        target_val = st.number_input("سعر البيع المتوقع", value=85.00)
-        profit = (target_val - price_in) * amount
-        st.success(f"الربح الإجمالي: {profit:,.2f} $")
-        
-        st.markdown("---")
-        st.markdown("### 📰 أخبار السوق")
-        st.caption("📈 تدفق سيولة ضخمة في قطاع السهم")
-        st.caption("💡 توقعات بارتفاع العائد على السهم")
-        st.caption("📂 إعلان نتائج مالية إيجابية")
+    # تفعيل التنبيهات الصوتية تلقائياً عند الوصول للأهداف
+    if current_price >= target_1:
+        play_sound("https://www.soundjay.com/buttons/beep-01a.mp3")
 
-    # --- العمود الأوسط: الرسم البياني والأهداف (نفس تصميم الصورة) ---
-    with col_mid:
-        # الرسم البياني بشكل مصغر وأنيق
-        fig = go.Figure(data=[go.Candlestick(x=pd.date_range(start='2026-01-01', periods=20),
-                open=[70,71,72,71,73,74,75,74,76,77,78,77,79,80,81,80,82,83,84,85],
-                high=[72,73,73,72,75,76,77,75,78,79,80,78,81,82,83,82,84,85,86,87],
-                low=[69,70,71,70,72,73,74,73,75,76,77,76,78,79,80,79,81,82,83,84],
-                close=[71,72,71,73,74,75,74,76,77,78,77,79,80,81,80,82,83,84,85,86])])
-        fig.update_layout(height=350, template="plotly_dark", margin=dict(l=0,r=0,t=0,b=0), paper_bgcolor='rgba(0,0,0,0)')
+    # تقسيم الصفحة (توزيع سهم الاحترافي)
+    col_chart, col_targets, col_calc = st.columns([2.5, 0.8, 1])
+
+    with col_chart:
+        st.markdown(f"## {ticker.upper()} <span style='font-size:18px; color:gray;'>{curr}</span>", unsafe_allow_html=True)
+        m1, m2, m3 = st.columns(3)
+        m1.metric("Price", f"{current_price} {curr}", "1.45%")
+        m2.metric("Open", f"{76.10} {curr}")
+        m3.metric("Volume", "5.2M")
+
+        fig = go.Figure(data=[go.Scatter(x=list(range(20)), y=[70,71,72,75,74,76,78,77,79,81,80,82,83,85,84,86,88,87,89,90], 
+                         fill='tozeroy', line=dict(color='#00c073', width=2))])
+        fig.update_layout(height=400, template="plotly_white", margin=dict(l=0,r=0,t=20,b=0),
+                          xaxis_visible=False, yaxis_gridcolor='#f0f0f0')
         st.plotly_chart(fig, use_container_width=True)
-        
-        # عرض الأهداف بشكل فاخر (مربعات تحت الرسم)
-        t1, t2, t3 = st.columns(3)
-        t1.markdown("<div class='target-box'><b>الهدف 1</b><br><h2>80.00</h2></div>", unsafe_allow_html=True)
-        t2.markdown("<div class='target-box'><b>الهدف 2</b><br><h2>85.00</h2></div>", unsafe_allow_html=True)
-        t3.markdown("<div class='target-box'><b>الهدف 3</b><br><h2>90.00</h2></div>", unsafe_allow_html=True)
 
-    # --- العمود الأيسر: بيانات الإغلاق والوقف ---
-    with col_left:
-        st.markdown("### 📊 بيانات حيوية")
-        st.metric("السعر الحالي", "75.30", "1.50 (2.05%)")
-        st.metric("سعر الافتتاح", "76.00")
-        st.metric("الإغلاق السابق", "73.20")
-        st.error("وقف الخسارة: 68.50")
+    with col_targets:
+        st.markdown("<p style='font-weight:bold; color:#333;'>الأهداف اللحظية</p>", unsafe_allow_html=True)
+        st.markdown(f"""
+            <div class="target-card"><div class="target-label">الهدف الاول</div><div class="target-price">{target_1} {curr}</div></div>
+            <div class="target-card"><div class="target-label">الهدف الثاني</div><div class="target-price">{target_2} {curr}</div></div>
+            <div class="target-card"><div class="target-label">الهدف الثالث</div><div class="target-price">{target_3} {curr}</div></div>
+            <div class="target-card" style="border-right-color:#ff4b4b;"><div class="target-label">وقف الخسارة</div><div class="target-price">{stop_loss} {curr}</div></div>
+        """, unsafe_allow_html=True)
+
+    with col_calc:
+        st.markdown("<div class='sidebar-box'>", unsafe_allow_html=True)
+        st.markdown("<p style='font-weight:bold;'>🧮 حاسبة الأرباح</p>", unsafe_allow_html=True)
+        buy_p = st.number_input("Entry Price", value=70.0)
+        qty = st.number_input("Qty", value=100)
+        sell_p = st.number_input("Exit Price", value=85.0)
+        total_profit = (sell_p - buy_p) * qty
+        st.markdown(f"<h3 style='color:#00c073;'>+{total_profit:,.2f} {curr}</h3>", unsafe_allow_html=True)
+        st.button("احسب الآن", use_container_width=True)
+        st.markdown("</div>", unsafe_allow_html=True)
         
-        # تنبيهات صوتية (محاكاة)
-        st.markdown("---")
-        if st.button("🔊 تفعيل تنبيهات الأهداف"):
-            st.toast("تم تفعيل التنبيهات الصوتية لجوالك ولابتوبك")
+        st.markdown("<br>### 📰 أخبار")
+        st.caption("• تحسن ملحوظ في سيولة السهم اليوم")
+        st.caption("• السهم يقترب من منطقة عرض قوية")
 
 else:
-    # الصفحة الترحيبية في حال عدم البحث
-    st.info("يرجى كتابة اسم الشركة في خانة البحث أعلاه لبدء التحليل الفني واستخراج الأهداف.")
-    st.image("https://images.unsplash.com/photo-1611974717482-58fce0001565?auto=format&fit=crop&w=1350&q=80", caption="بانتظار اختيار سهمك المفضل")
+    st.markdown("<br><br><center><h3>بانتظار إدخال رمز السهم لبدء المراقبة...</h3></center>", unsafe_allow_html=True)
 
 # شريط الأخبار السفلي
-st.markdown("<br><marquee style='color: #00ffcc; font-size: 20px;'>نظام يلا سكالب: جاري مراقبة السيولة اللحظية لجميع أسهم السوق السعودي والأسواق العالمية.. استعد للدخول</marquee>", unsafe_allow_html=True)
+st.markdown(f"""
+    <div style="position: fixed; bottom: 0; left: 0; width: 100%; background-color: #ffffff; padding: 10px; border-top: 1px solid #eee; text-align: center;">
+        <marquee style="color: #00c073; font-weight: bold;">YALLA SCALP PRO: Monitoring Market Liquidity... All Targets calculated by Daily Volume...</marquee>
+    </div>
+""", unsafe_allow_html=True)
